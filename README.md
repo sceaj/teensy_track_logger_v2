@@ -15,8 +15,12 @@ Major changes from the origin version are:
    https://www.pjrc.com/store/teensy41.html
  * Move to FreeRTOS real-time operating system
  * Continue to support CAN bus data collection
- * Enhance vehicle dynamics data by moving to an MPU-6050 3-axis accelerometer and gyro. 
-   https://www.sparkfun.com/products/11028
+ * Enhance vehicle dynamics data by moving to either:
+   ** NXP FXOS8700 + FXAS21002 accelerometer, gyro, magnetometer
+     https://www.adafruit.com/product/3463 $14.95
+   ** MPU-6050 3-axis accelerometer and gyro.
+     https://www.adafruit.com/product/3886 $6.95 
+     https://www.sparkfun.com/products/11028 $29.95 huh?
  * Add real-time bluetooth data that can be displayed by iDash.
    https://www.sparkfun.com/products/125776 or https://www.sparkfun.com/products/12577
    (Note that the pinouts swap tx and rx in the alternate part)
@@ -25,5 +29,5 @@ Major changes from the origin version are:
  * Add a serial monitor to troubleshoot and or review and save configurations
 
 ### Development Tools
- * MCUXpresso IDE v11.2.0 [Build 4120] [2020-07-09]
- * MCUXpresso SDK v2.8.2 [376 2020-08-19] Manifest: v3.6.0
+ * MCUXpresso IDE v11.3.0 [Build 5222] [2021-01-11]
+ * MCUXpresso SDK v2.9.2 [453 2021-03-10] Manifest: v3.8.0
