@@ -933,12 +933,14 @@ void LPUART1_RX_IRQHandler(void)
     SDK_ISR_EXIT_BARRIER;
 }
 #else
-void LPUART1_IRQHandler(void);
-void LPUART1_IRQHandler(void)
-{
-    HAL_UartInterruptHandle(1);
-    SDK_ISR_EXIT_BARRIER;
-}
+// Disable LPUART1 for SerialManager since we use it for GPS
+// and manage it ourselves
+//void LPUART1_IRQHandler(void);
+//void LPUART1_IRQHandler(void)
+//{
+//    HAL_UartInterruptHandle(1);
+//    SDK_ISR_EXIT_BARRIER;
+//}
 #endif
 #endif
 #endif

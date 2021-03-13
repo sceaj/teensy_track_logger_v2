@@ -2,7 +2,7 @@
  * init.c
  *
  *  Created on: Feb 14, 2021
- *      Author: jrosen
+ *      Author: sceaj
  */
 
 #include "init.h"
@@ -18,14 +18,14 @@ extern TaskHandle_t g_GpsTaskHandle;
 extern TaskHandle_t g_LoggerTaskHandle;
 extern TaskHandle_t g_ShellTaskHandle;
 
-static void SdardInsertedCallback(bool isInserted, void *userData) {
+static void SdcardInsertedCallback(bool isInserted, void *userData) {
 	PRINTF("Card detection: %s\n", (isInserted ? "present" : "absent"));
 }
 
 static status_t SdcardWaitCardInsert(void)
 {
 	PRINTF("Entering BOARD_SD_Config...\n");
-    BOARD_SD_Config(&g_sd, SdardInsertedCallback, BOARD_SDMMC_SD_HOST_IRQ_PRIORITY, NULL);
+    BOARD_SD_Config(&g_sd, SdcardInsertedCallback, BOARD_SDMMC_SD_HOST_IRQ_PRIORITY, NULL);
 
     PRINTF("Initializing SD host...\n");
 	/* SD host init function */

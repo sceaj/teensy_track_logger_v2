@@ -2,7 +2,7 @@
  * gps.h
  *
  *  Created on: Feb 15, 2021
- *      Author: jrosen
+ *      Author: sceaj
  *
  *      MIT License
  *
