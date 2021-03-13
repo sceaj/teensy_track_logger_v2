@@ -21,7 +21,7 @@
 
 #include "ff.h"			/* Declarations of FatFs API */
 #include "diskio.h"		/* Declarations of device I/O functions */
-#include "fsl_debug_console.h"
+
 
 /*--------------------------------------------------------------------------
 
@@ -3398,12 +3398,10 @@ static FRESULT mount_volume (	/* FR_OK(0): successful, !=0: an error occurred */
 	/* Get logical drive number */
 	*rfs = 0;
 	vol = get_ldnumber(path);
-	PRINTF("get_ldnumber vol=%d\n", vol);
 	if (vol < 0) return FR_INVALID_DRIVE;
 
 	/* Check if the filesystem object is valid or not */
 	fs = FatFs[vol];					/* Get pointer to the filesystem object */
-	PRINTF("fs@0x%X\n", fs);
 	if (!fs) return FR_NOT_ENABLED;		/* Is the filesystem object available? */
 #if FF_FS_REENTRANT
 	if (!lock_fs(fs)) return FR_TIMEOUT;	/* Lock the volume */
@@ -5043,12 +5041,10 @@ FRESULT f_mkdir (
 
 
 	res = mount_volume(&path, &fs, FA_WRITE);	/* Get logical drive */
-	PRINTF("mount_volume: %d\n", res);
 	if (res == FR_OK) {
 		dj.obj.fs = fs;
 		INIT_NAMBUF(fs);
 		res = follow_path(&dj, path);			/* Follow the file path */
-		PRINTF("follow_path: %d\n", res);
 		if (res == FR_OK) res = FR_EXIST;		/* Name collision? */
 		if (FF_FS_RPATH && res == FR_NO_FILE && (dj.fn[NSFLAG] & NS_DOT)) {	/* Invalid name? */
 			res = FR_INVALID_NAME;
@@ -5060,11 +5056,9 @@ FRESULT f_mkdir (
 			if (dcl == 0) res = FR_DENIED;		/* No space to allocate a new cluster? */
 			if (dcl == 1) res = FR_INT_ERR;		/* Any insanity? */
 			if (dcl == 0xFFFFFFFF) res = FR_DISK_ERR;	/* Disk error? */
-			PRINTF("After create_chain: %d\n", res);
 			tm = GET_FATTIME();
 			if (res == FR_OK) {
 				res = dir_clear(fs, dcl);		/* Clean up the new table */
-				PRINTF("dir_clear: %d\n", res);
 				if (res == FR_OK) {
 					if (!FF_FS_EXFAT || fs->fs_type != FS_EXFAT) {	/* Create dot entries (FAT only) */
 						mem_set(fs->win + DIR_Name, ' ', 11);	/* Create "." entry */
@@ -5078,7 +5072,6 @@ FRESULT f_mkdir (
 						fs->wflag = 1;
 					}
 					res = dir_register(&dj);	/* Register the object to the parent directoy */
-					PRINTF("dir_register: %d\n", res);
 				}
 			}
 			if (res == FR_OK) {
@@ -5091,7 +5084,6 @@ FRESULT f_mkdir (
 					fs->dirbuf[XDIR_GenFlags] = 3;				/* Initialize the object flag */
 					fs->dirbuf[XDIR_Attr] = AM_DIR;				/* Attribute */
 					res = store_xdir(&dj);
-					PRINTF("store_xdir: %d\n", res);
 				} else
 #endif
 				{
@@ -5102,7 +5094,6 @@ FRESULT f_mkdir (
 				}
 				if (res == FR_OK) {
 					res = sync_fs(fs);
-					PRINTF("sync_fs: %d\n", res);
 				}
 			} else {
 				remove_chain(&sobj, dcl, 0);		/* Could not register, remove the allocated cluster */

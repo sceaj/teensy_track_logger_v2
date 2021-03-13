@@ -10,8 +10,9 @@
  * Included files
  **********************************************************************************************************************/
 #include "fsl_common.h"
-#include "fsl_lpuart.h"
 #include "fsl_clock.h"
+#include "fsl_lpi2c.h"
+#include "fsl_lpuart.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -21,6 +22,15 @@ extern "C" {
  * Definitions
  **********************************************************************************************************************/
 /* Definitions for BOARD_InitPeripherals functional group */
+/* BOARD_InitPeripherals defines for LPI2C1 */
+/* Definition of peripheral ID */
+#define LPI2C1_PERIPHERAL LPI2C1
+/* Definition of clock source */
+#define LPI2C1_CLOCK_FREQ 60000000UL
+/* Transfer buffer size */
+#define LPI2C1_MASTER_BUFFER_SIZE 32
+/* Definition of slave address */
+#define LPI2C1_MASTER_SLAVE_ADDRESS 0
 /* Definition of peripheral ID */
 #define LPUART1_PERIPHERAL LPUART1
 /* Definition of the clock source frequency */
@@ -29,11 +39,16 @@ extern "C" {
 /***********************************************************************************************************************
  * Global variables
  **********************************************************************************************************************/
+extern const lpi2c_master_config_t LPI2C1_masterConfig;
+extern lpi2c_master_transfer_t LPI2C1_masterTransfer;
+extern uint8_t LPI2C1_masterBuffer[LPI2C1_MASTER_BUFFER_SIZE];
+extern lpi2c_master_handle_t LPI2C1_masterHandle;
 extern const lpuart_config_t LPUART1_config;
 
 /***********************************************************************************************************************
  * Initialization functions
  **********************************************************************************************************************/
+
 void BOARD_InitPeripherals(void);
 
 /***********************************************************************************************************************

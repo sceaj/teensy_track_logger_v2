@@ -6,6 +6,10 @@ Version 2.0.0.1 - Initial Checkpoint
 
  
 ## History
+Version 2.0.0.2 - 2021-03-12
+Update development environment to MCUXpresso IDE v11.3.0 [Build 5222]
+                                  MCUXpresso SDK v2.9.2 Manifest 3.8.0
+                                  
 Version 2.0.0.1 - 2021-02-14
 Initial checkpoint that includes
  - Basic initialization of USB CDC VCOM Debug Console

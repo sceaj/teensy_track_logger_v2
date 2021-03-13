@@ -28,7 +28,7 @@ static sd_io_voltage_t s_ioVoltage = {
 };
 #endif
 static sdmmchost_t s_host;
-OSA_EVENT_HANDLE_DEFINE(s_event);
+static sdmmc_osa_event_t s_event;
 #ifdef SDIO_ENABLED
 static sdio_card_int_t s_sdioInt;
 #endif
@@ -128,7 +128,7 @@ void BOARD_SD_Config(void *card, sd_cd_t cd, uint32_t hostIRQPriority, void *use
     ((sd_card_t *)card)->host->hostController.base           = BOARD_SDMMC_SD_HOST_BASEADDR;
     ((sd_card_t *)card)->host->hostController.sourceClock_Hz = BOARD_USDHC1ClockConfiguration();
 
-    ((sd_card_t *)card)->host->hostEvent     = &s_event;
+    ((sd_card_t *)card)->host->hostEvent     = s_event;
     ((sd_card_t *)card)->usrParam.cd         = &s_cd;
     ((sd_card_t *)card)->usrParam.pwr        = BOARD_SDCardPowerControl;
     ((sd_card_t *)card)->usrParam.ioStrength = BOARD_SD_Pin_Config;

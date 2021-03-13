@@ -8,11 +8,13 @@
 #include "init.h"
 #include "blinker.h"
 #include "fsl_iomuxc.h"
+#include "gps.h"
 #include "logger.h"
 #include "sdmmc_config.h"
 #include "shell_task.h"
 
 extern TaskHandle_t g_BlinkTaskHandle;
+extern TaskHandle_t g_GpsTaskHandle;
 extern TaskHandle_t g_LoggerTaskHandle;
 extern TaskHandle_t g_ShellTaskHandle;
 
@@ -93,11 +95,14 @@ void StartTasks(void *pvParameters) {
     vTaskDelay(500);
     vTaskResume(g_ShellTaskHandle);
 	vTaskDelay(500);
+//	vTaskResume(g_GpsTaskHandle);
+//	vTaskDelay(500);
     vTaskResume(g_LoggerTaskHandle);
 }
 
 void InitTask(void *pvParameters) {
-	if (LoggerInit() == kStatus_Success) {
+	if ((LoggerInit() == kStatus_Success)
+			&& (GpsInit() == kStatus_Success)) {
 		StartTasks(pvParameters);
 		vTaskDelete(NULL);
 	} else {

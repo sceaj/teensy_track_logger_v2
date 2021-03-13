@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding= "UTF-8" ?>
-<configuration name="" xsi:schemaLocation="http://mcuxpresso.nxp.com/XSD/mex_configuration_1.8 http://mcuxpresso.nxp.com/XSD/mex_configuration_1.8.xsd" uuid="011bbb60-296b-41d9-8865-1799cc86859a" version="1.8" xmlns="http://mcuxpresso.nxp.com/XSD/mex_configuration_1.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<configuration name="" xsi:schemaLocation="http://mcuxpresso.nxp.com/XSD/mex_configuration_1.9 http://mcuxpresso.nxp.com/XSD/mex_configuration_1.9.xsd" uuid="011bbb60-296b-41d9-8865-1799cc86859a" version="1.9" xmlns="http://mcuxpresso.nxp.com/XSD/mex_configuration_1.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
    <common>
       <processor>MIMXRT1062xxxxA</processor>
       <package>MIMXRT1062DVJ6A</package>
@@ -15,13 +15,13 @@
       <generate_code_modified_registers_only>false</generate_code_modified_registers_only>
    </preferences>
    <tools>
-      <pins name="Pins" version="8.0" enabled="true" update_project_code="true">
+      <pins name="Pins" version="9.0" enabled="true" update_project_code="true">
          <generated_project_files>
             <file path="board/pin_mux.c" update_enabled="true"/>
             <file path="board/pin_mux.h" update_enabled="true"/>
          </generated_project_files>
          <pins_profile>
-            <processor_version>8.0.3</processor_version>
+            <processor_version>9.0.1</processor_version>
             <power_domains/>
          </pins_profile>
          <functions_list>
@@ -48,6 +48,16 @@
                         <data>true</data>
                      </feature>
                   </dependency>
+                  <dependency resourceType="Peripheral" resourceId="LPI2C1" description="Peripheral LPI2C1 is not initialized" problem_level="1" source="Pins:BOARD_InitPins">
+                     <feature name="initialized" evaluation="equal">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="Peripheral" resourceId="LPI2C3" description="Peripheral LPI2C3 is not initialized" problem_level="1" source="Pins:BOARD_InitPins">
+                     <feature name="initialized" evaluation="equal">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
                   <dependency resourceType="SWComponent" resourceId="platform.drivers.common" description="Pins initialization requires the COMMON Driver in the project." problem_level="2" source="Pins:BOARD_InitPins">
                      <feature name="enabled" evaluation="equal" configuration="core0">
                         <data>true</data>
@@ -70,6 +80,32 @@
                   <pin peripheral="USDHC1" signal="usdhc_data, 1" pin_num="K1" pin_signal="GPIO_SD_B0_03"/>
                   <pin peripheral="USDHC1" signal="usdhc_data, 2" pin_num="H2" pin_signal="GPIO_SD_B0_04"/>
                   <pin peripheral="USDHC1" signal="usdhc_data, 3" pin_num="J2" pin_signal="GPIO_SD_B0_05"/>
+                  <pin peripheral="LPI2C1" signal="SCL" pin_num="J11" pin_signal="GPIO_AD_B1_00">
+                     <pin_features>
+                        <pin_feature name="pull_up_down_config" value="Pull_Up_22K_Ohm"/>
+                        <pin_feature name="open_drain" value="Enable"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="LPI2C1" signal="SDA" pin_num="K11" pin_signal="GPIO_AD_B1_01">
+                     <pin_features>
+                        <pin_feature name="pull_up_down_config" value="Pull_Up_22K_Ohm"/>
+                        <pin_feature name="open_drain" value="Enable"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="LPI2C3" signal="SCL" pin_num="K10" pin_signal="GPIO_AD_B1_07">
+                     <pin_features>
+                        <pin_feature name="software_input_on" value="Enable"/>
+                        <pin_feature name="pull_up_down_config" value="Pull_Up_22K_Ohm"/>
+                        <pin_feature name="open_drain" value="Enable"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="LPI2C3" signal="SDA" pin_num="J12" pin_signal="GPIO_AD_B1_06">
+                     <pin_features>
+                        <pin_feature name="software_input_on" value="Enable"/>
+                        <pin_feature name="pull_up_down_config" value="Pull_Up_22K_Ohm"/>
+                        <pin_feature name="open_drain" value="Enable"/>
+                     </pin_features>
+                  </pin>
                </pins>
             </function>
          </functions_list>
@@ -80,7 +116,7 @@
             <file path="board/clock_config.h" update_enabled="true"/>
          </generated_project_files>
          <clocks_profile>
-            <processor_version>8.0.3</processor_version>
+            <processor_version>9.0.1</processor_version>
          </clocks_profile>
          <clock_configurations>
             <clock_configuration name="BOARD_BootClockRUN">
@@ -200,7 +236,7 @@
             <file path="board/dcd.h" update_enabled="true"/>
          </generated_project_files>
          <dcdx_profile>
-            <processor_version>8.0.3</processor_version>
+            <processor_version>9.0.1</processor_version>
             <output_format>c_array</output_format>
          </dcdx_profile>
          <dcdx_configurations>
@@ -211,8 +247,18 @@
             </dcdx_configuration>
          </dcdx_configurations>
       </dcdx>
-      <periphs name="Peripherals" version="8.0" enabled="true" update_project_code="true">
+      <periphs name="Peripherals" version="9.0" enabled="true" update_project_code="true">
          <dependencies>
+            <dependency resourceType="SWComponent" resourceId="platform.drivers.lpi2c" description="LPI2C Driver not found in the toolchain/IDE project. Project will not compile!" problem_level="2" source="Peripherals">
+               <feature name="enabled" evaluation="equal">
+                  <data type="Boolean">true</data>
+               </feature>
+            </dependency>
+            <dependency resourceType="SWComponent" resourceId="platform.drivers.lpi2c" description="Unsupported version of the LPI2C Driver in the toolchain/IDE project. Required: ${required_value}, actual: ${actual_value}. Project might not compile correctly." problem_level="1" source="Peripherals">
+               <feature name="version" evaluation="equivalent">
+                  <data type="Version">2.1.5</data>
+               </feature>
+            </dependency>
             <dependency resourceType="SWComponent" resourceId="platform.drivers.lpuart" description="LPUART Driver not found in the toolchain/IDE project. Project will not compile!" problem_level="2" source="Peripherals">
                <feature name="enabled" evaluation="equal">
                   <data type="Boolean">true</data>
@@ -229,13 +275,28 @@
             <file path="board/peripherals.h" update_enabled="true"/>
          </generated_project_files>
          <peripherals_profile>
-            <processor_version>8.0.3</processor_version>
+            <processor_version>9.0.1</processor_version>
          </peripherals_profile>
          <functional_groups>
             <functional_group name="BOARD_InitPeripherals" uuid="7d292604-c7f1-4fc8-80fa-046723cc82fb" called_from_default_init="true" id_prefix="" core="core0">
                <description></description>
                <options/>
                <dependencies>
+                  <dependency resourceType="ClockOutput" resourceId="LPI2C_CLK_ROOT" description="LPI2C_CLK_ROOT is inactive." problem_level="2" source="Peripherals:BOARD_InitPeripherals">
+                     <feature name="frequency" evaluation="greaterThan">
+                        <data type="Frequency" unit="Hz">0</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PeripheralUnifiedSignal" resourceId="LPI2C1.lpi2c_scl" description="Signal serial clock of the peripheral LPI2C1 is not routed." problem_level="1" source="Peripherals:BOARD_InitPeripherals">
+                     <feature name="routed" evaluation="">
+                        <data type="Boolean">true</data>
+                     </feature>
+                  </dependency>
+                  <dependency resourceType="PeripheralUnifiedSignal" resourceId="LPI2C1.lpi2c_sda" description="Signal serial data of the peripheral LPI2C1 is not routed." problem_level="1" source="Peripherals:BOARD_InitPeripherals">
+                     <feature name="routed" evaluation="">
+                        <data type="Boolean">true</data>
+                     </feature>
+                  </dependency>
                   <dependency resourceType="ClockOutput" resourceId="UART_CLK_ROOT" description="UART_CLK_ROOT is inactive." problem_level="2" source="Peripherals:BOARD_InitPeripherals">
                      <feature name="frequency" evaluation="greaterThan">
                         <data type="Frequency" unit="Hz">0</data>
@@ -253,7 +314,61 @@
                   </dependency>
                </dependencies>
                <instances>
-                  <instance name="LPUART1" uuid="eaa573ff-f3d3-4038-9e42-2b141763e4c8" type="lpuart" type_id="lpuart_54a65a580e3462acdbacefd5299e0cac" mode="polling" peripheral="LPUART1" enabled="true" comment="" custom_name_enabled="false">
+                  <instance name="LPI2C1" uuid="b46491a6-8403-4e1b-ae7b-b6e1ef130ca1" type="lpi2c" type_id="lpi2c_db68d4f4f06a22e25ab51fe9bd6db4d2" mode="master" peripheral="LPI2C1" enabled="true" comment="" custom_name_enabled="false" editing_lock="false">
+                     <config_set name="main" quick_selection="qs_interrupt">
+                        <setting name="clockSource" value="Lpi2cClock"/>
+                        <setting name="clockSourceFreq" value="BOARD_BootClockRUN"/>
+                        <struct name="interrupt">
+                           <setting name="IRQn" value="LPI2C1_IRQn"/>
+                           <setting name="enable_interrrupt" value="enabled"/>
+                           <setting name="enable_priority" value="false"/>
+                           <setting name="priority" value="0"/>
+                           <setting name="enable_custom_name" value="false"/>
+                        </struct>
+                     </config_set>
+                     <config_set name="master">
+                        <setting name="mode" value="transfer"/>
+                        <struct name="config">
+                           <setting name="enableMaster" value="true"/>
+                           <setting name="enableDoze" value="true"/>
+                           <setting name="debugEnable" value="false"/>
+                           <setting name="ignoreAck" value="false"/>
+                           <setting name="pinConfig" value="kLPI2C_2PinOpenDrain"/>
+                           <setting name="baudRate_Hz" value="200000"/>
+                           <setting name="busIdleTimeout_ns" value="0"/>
+                           <setting name="pinLowTimeout_ns" value="0"/>
+                           <setting name="sdaGlitchFilterWidth_ns" value="0"/>
+                           <setting name="sclGlitchFilterWidth_ns" value="0"/>
+                           <struct name="hostRequest">
+                              <setting name="enable" value="false"/>
+                              <setting name="source" value="kLPI2C_HostRequestExternalPin"/>
+                              <setting name="polarity" value="kLPI2C_HostRequestPinActiveHigh"/>
+                           </struct>
+                           <set name="edmaRequestSources">
+                              <selected/>
+                           </set>
+                        </struct>
+                        <struct name="transfer">
+                           <setting name="blocking" value="false"/>
+                           <setting name="enable_custom_handle" value="false"/>
+                           <struct name="callback">
+                              <setting name="name" value=""/>
+                              <setting name="userData" value=""/>
+                           </struct>
+                           <set name="flags">
+                              <selected/>
+                           </set>
+                           <setting name="slaveAddress" value="0"/>
+                           <setting name="direction" value="kLPI2C_Read"/>
+                           <setting name="subaddress" value="0"/>
+                           <setting name="subaddressSize" value="1"/>
+                           <setting name="blocking_buffer" value="false"/>
+                           <setting name="enable_custom_buffer" value="false"/>
+                           <setting name="dataSize" value="32"/>
+                        </struct>
+                     </config_set>
+                  </instance>
+                  <instance name="LPUART1" uuid="eaa573ff-f3d3-4038-9e42-2b141763e4c8" type="lpuart" type_id="lpuart_54a65a580e3462acdbacefd5299e0cac" mode="polling" peripheral="LPUART1" enabled="true" comment="" custom_name_enabled="false" editing_lock="false">
                      <config_set name="lpuartConfig_t" quick_selection="QuickSelection1">
                         <struct name="lpuartConfig">
                            <setting name="clockSource" value="LpuartClock"/>
@@ -274,6 +389,12 @@
                            <setting name="enableTx" value="true"/>
                            <setting name="enableRx" value="true"/>
                         </struct>
+                     </config_set>
+                  </instance>
+                  <instance name="NVIC" uuid="c4ade65c-aea7-4fad-9412-d01de428f2f4" type="nvic" type_id="nvic_57b5eef3774cc60acaede6f5b8bddc67" mode="general" peripheral="NVIC" enabled="true" comment="" custom_name_enabled="false" editing_lock="false">
+                     <config_set name="nvic">
+                        <array name="interrupt_table"/>
+                        <array name="interrupts"/>
                      </config_set>
                   </instance>
                </instances>

@@ -58,6 +58,7 @@
 #include "blinker.h"
 #include "board.h"
 #include "init.h"
+#include "gps.h"
 #include "logger.h"
 #include "peripherals.h"
 #include "pin_mux.h"
@@ -66,7 +67,7 @@
 #include "fsl_debug_console.h"
 /* TODO: insert other include files here. */
 #include "FreeRTOS.h"
-#include "serial_manager.h"
+#include "fsl_component_serial_manager.h"
 #include "shell_task.h"
 #include "task.h"
 
@@ -76,6 +77,7 @@
 /* TODO: insert other definitions and declarations here. */
 TaskHandle_t g_InitTaskHandle = NULL;
 TaskHandle_t g_BlinkTaskHandle = NULL;
+TaskHandle_t g_GpsTaskHandle = NULL;
 TaskHandle_t g_LoggerTaskHandle = NULL;
 TaskHandle_t g_ShellTaskHandle = NULL;
 TaskHandle_t g_MsgGenTaskHandle = NULL;
@@ -83,6 +85,7 @@ TaskHandle_t g_DebugConsoleTaskHandle = NULL;
 
 void BOARD_InitHardware(void) {
 
+	BOARD_ConfigMPU();
     BOARD_InitBootPins();
     BOARD_InitBootClocks();
     BOARD_InitBootPeripherals();
@@ -103,7 +106,7 @@ int main(void) {
 	// Perform Initialization
 	BaseType_t xStatus = xTaskCreate(InitTask, /* Function that implements the task. */
     		"Initialization",					   /* Text name for the task. */
-            384U,		      					   /* Stack size in words, not bytes. */
+            512U,		      					   /* Stack size in words, not bytes. */
             NULL,    							   /* Parameter passed into the task. */
             tskIDLE_PRIORITY + 2,				   /* Priority at which the task is created. */
 			&g_InitTaskHandle);				   /* Used to pass out the created task's handle. */
@@ -120,14 +123,20 @@ int main(void) {
     } else {
     	PRINTF("Error: Failed to create Shell task\n");
     }
-    xStatus = xTaskCreate(LoggerTask, "Logger", 384U, NULL, tskIDLE_PRIORITY + 3, &g_LoggerTaskHandle);
+    xStatus = xTaskCreate(GpsTask, "GPS", 384U, NULL, tskIDLE_PRIORITY + 3, &g_GpsTaskHandle);
+    if (xStatus == pdPASS) {
+    	vTaskSuspend(g_GpsTaskHandle);
+    } else {
+    	PRINTF("Error: Failed to create GPS task\n");
+    }
+    xStatus = xTaskCreate(LoggerTask, "Logger", 384U, NULL, tskIDLE_PRIORITY + 5, &g_LoggerTaskHandle);
     if (xStatus == pdPASS) {
     	vTaskSuspend(g_LoggerTaskHandle);
     } else {
     	PRINTF("Error: Failed to create Logger task\n");
     }
 
-	vTaskStartScheduler();
+    vTaskStartScheduler();
 
     return 0;
 }

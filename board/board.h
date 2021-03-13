@@ -59,6 +59,8 @@ extern "C" {
  */
 void BOARD_InitDebugConsole(void);
 
+void BOARD_ConfigMPU(void);
+
 #if defined(__cplusplus)
 }
 #endif /* __cplusplus */
