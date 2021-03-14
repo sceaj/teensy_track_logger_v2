@@ -12,7 +12,7 @@
 #include "fsl_common.h"
 #include "fsl_clock.h"
 #include "fsl_lpi2c.h"
-#include "fsl_lpuart.h"
+#include "fsl_snvs_hp.h"
 
 #if defined(__cplusplus)
 extern "C" {
@@ -32,9 +32,7 @@ extern "C" {
 /* Definition of slave address */
 #define LPI2C1_MASTER_SLAVE_ADDRESS 0
 /* Definition of peripheral ID */
-#define LPUART1_PERIPHERAL LPUART1
-/* Definition of the clock source frequency */
-#define LPUART1_CLOCK_SOURCE 80000000UL
+#define SNVS_PERIPHERAL SNVS
 
 /***********************************************************************************************************************
  * Global variables
@@ -43,7 +41,10 @@ extern const lpi2c_master_config_t LPI2C1_masterConfig;
 extern lpi2c_master_transfer_t LPI2C1_masterTransfer;
 extern uint8_t LPI2C1_masterBuffer[LPI2C1_MASTER_BUFFER_SIZE];
 extern lpi2c_master_handle_t LPI2C1_masterHandle;
-extern const lpuart_config_t LPUART1_config;
+/* SNVS HP configuration */
+extern const snvs_hp_rtc_config_t SNVS_config;
+/* SNVS HP date and time structure */
+extern snvs_hp_rtc_datetime_t SNVS_dateTimeStruct;
 
 /***********************************************************************************************************************
  * Initialization functions

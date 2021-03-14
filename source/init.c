@@ -8,6 +8,7 @@
 #include "init.h"
 #include "blinker.h"
 #include "gps.h"
+#include "neo_m9n.h"
 #include "logger.h"
 #include "shell_task.h"
 
@@ -41,9 +42,31 @@ void StartTasks(void *pvParameters) {
 
 void InitTask(void *pvParameters) {
 
+    snvs_hp_rtc_datetime_t rtcDateTime;
 	s_loggerStatus = LoggerInit();
 	s_gpsStatus = GpsInit();
+
+	// Wait for GPS to acquire a valid time
+	// Wait up to 3 min - 720 250ms ticks
+	gps_time_t gpsTime = NEOM9N_GpsTime();
+	uint32_t timeTicks = 0U;
+	while (((gpsTime.valid & 0x07) != 0x07)
+	        && (timeTicks++ < 720)) {
+	    vTaskDelay(250U);
+	    gpsTime = NEOM9N_GpsTime();
+	}
+	if ((gpsTime.valid & 0x07) == 0x07) {
+	    rtcDateTime.year = gpsTime.year;
+	    rtcDateTime.month = gpsTime.month;
+	    rtcDateTime.day = gpsTime.day;
+	    rtcDateTime.hour = gpsTime.hour;
+	    rtcDateTime.minute = gpsTime.minute;
+	    rtcDateTime.second = gpsTime.sec;
+	    SNVS_HP_RTC_SetDatetime(SNVS, &rtcDateTime);
+	}
+
 	StartTasks(pvParameters);
+
 	vTaskDelete(NULL);
 }
 

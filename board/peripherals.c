@@ -129,65 +129,6 @@ static void LPI2C1_init(void) {
 }
 
 /***********************************************************************************************************************
- * LPUART1 initialization code
- **********************************************************************************************************************/
-/* clang-format off */
-/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
-instance:
-- name: 'LPUART1'
-- type: 'lpuart'
-- mode: 'polling'
-- custom_name_enabled: 'false'
-- type_id: 'lpuart_54a65a580e3462acdbacefd5299e0cac'
-- functional_group: 'BOARD_InitPeripherals'
-- peripheral: 'LPUART1'
-- config_sets:
-  - lpuartConfig_t:
-    - lpuartConfig:
-      - clockSource: 'LpuartClock'
-      - lpuartSrcClkFreq: 'BOARD_BootClockRUN'
-      - baudRate_Bps: '115200'
-      - parityMode: 'kLPUART_ParityDisabled'
-      - dataBitsCount: 'kLPUART_EightDataBits'
-      - isMsb: 'false'
-      - stopBitCount: 'kLPUART_OneStopBit'
-      - txFifoWatermark: '0'
-      - rxFifoWatermark: '1'
-      - enableRxRTS: 'false'
-      - enableTxCTS: 'false'
-      - txCtsSource: 'kLPUART_CtsSourcePin'
-      - txCtsConfig: 'kLPUART_CtsSampleAtStart'
-      - rxIdleType: 'kLPUART_IdleTypeStartBit'
-      - rxIdleConfig: 'kLPUART_IdleCharacter1'
-      - enableTx: 'true'
-      - enableRx: 'true'
-    - quick_selection: 'QuickSelection1'
- * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
-/* clang-format on */
-const lpuart_config_t LPUART1_config = {
-  .baudRate_Bps = 115200UL,
-  .parityMode = kLPUART_ParityDisabled,
-  .dataBitsCount = kLPUART_EightDataBits,
-  .isMsb = false,
-  .stopBitCount = kLPUART_OneStopBit,
-  .txFifoWatermark = 0U,
-  .rxFifoWatermark = 1U,
-  .enableRxRTS = false,
-  .enableTxCTS = false,
-  .txCtsSource = kLPUART_CtsSourcePin,
-  .txCtsConfig = kLPUART_CtsSampleAtStart,
-  .rxIdleType = kLPUART_IdleTypeStartBit,
-  .rxIdleConfig = kLPUART_IdleCharacter1,
-  .enableTx = true,
-  .enableRx = true
-};
-
-static void LPUART1_init(void) {
-//	Let the GPS task initialize the LPUART
-//  LPUART_Init(LPUART1_PERIPHERAL, &LPUART1_config, LPUART1_CLOCK_SOURCE);
-}
-
-/***********************************************************************************************************************
  * NVIC initialization code
  **********************************************************************************************************************/
 /* clang-format off */
@@ -212,13 +153,85 @@ static void NVIC_init(void) {
 } */
 
 /***********************************************************************************************************************
+ * SNVS initialization code
+ **********************************************************************************************************************/
+/* clang-format off */
+/* TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+instance:
+- name: 'SNVS'
+- type: 'snvs_hp'
+- mode: 'general'
+- custom_name_enabled: 'false'
+- type_id: 'snvs_hp_5fc0a925779e7e5f8b9bedf272c8d94e'
+- functional_group: 'BOARD_InitPeripherals'
+- peripheral: 'SNVS'
+- config_sets:
+  - fsl_snvs_hp:
+    - snvs_hp_config:
+      - init: 'false'
+      - hac:
+        - set: 'false'
+        - initialValue: '0'
+        - load: 'false'
+        - enable: 'false'
+        - start: 'false'
+    - initRTC: 'true'
+    - snvs_hp_rtc_config:
+      - rtcCalEnable: 'false'
+      - rtcCalValueInt: '0'
+      - periodicInterruptFreq: '0'
+      - start: 'true'
+      - callTimeSynchronize: 'false'
+      - setDateTime: 'true'
+      - snvs_hp_rtc_datetime:
+        - year: '2020'
+        - month: '1'
+        - day: '1'
+        - hour: '0'
+        - minute: '0'
+        - second: '0'
+    - interruptsCfg:
+      - interruptSources: ''
+      - isInterruptEnabled: 'false'
+      - interrupt:
+        - IRQn: 'SNVS_HP_WRAPPER_IRQn'
+        - enable_interrrupt: 'enabled'
+        - enable_priority: 'false'
+        - priority: '0'
+        - enable_custom_name: 'false'
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
+/* clang-format on */
+const snvs_hp_rtc_config_t SNVS_config = {
+  .rtcCalEnable = false,
+  .rtcCalValue = 0,
+  .periodicInterruptFreq = 0
+};
+snvs_hp_rtc_datetime_t SNVS_dateTimeStruct = {
+  .year = 2020U,
+  .month = 1U,
+  .day = 1U,
+  .hour = 0U,
+  .minute = 0U,
+  .second = 0U
+};
+
+static void SNVS_init(void) {
+  /* SNVS HP RTC initialization */
+  SNVS_HP_RTC_Init(SNVS_PERIPHERAL, &SNVS_config);
+  /* SNVS HP date and time initialization */
+  SNVS_HP_RTC_SetDatetime(SNVS_PERIPHERAL, &SNVS_dateTimeStruct);
+  /* SNVS HP RTC start timer */
+  SNVS_HP_RTC_StartTimer(SNVS_PERIPHERAL);
+}
+
+/***********************************************************************************************************************
  * Initialization functions
  **********************************************************************************************************************/
 void BOARD_InitPeripherals(void)
 {
   /* Initialize components */
   LPI2C1_init();
-  LPUART1_init();
+  SNVS_init();
 }
 
 /***********************************************************************************************************************
