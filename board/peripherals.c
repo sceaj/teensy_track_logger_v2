@@ -183,7 +183,8 @@ const lpuart_config_t LPUART1_config = {
 };
 
 static void LPUART1_init(void) {
-  LPUART_Init(LPUART1_PERIPHERAL, &LPUART1_config, LPUART1_CLOCK_SOURCE);
+//	Let the GPS task initialize the LPUART
+//  LPUART_Init(LPUART1_PERIPHERAL, &LPUART1_config, LPUART1_CLOCK_SOURCE);
 }
 
 /***********************************************************************************************************************

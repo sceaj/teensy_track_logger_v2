@@ -35,7 +35,7 @@
 
 extern FATFS g_fileSystem;
 
-void loggerInit(void);
+status_t LoggerInit(void);
 
 void LoggerTask( void *pvParameters );
 

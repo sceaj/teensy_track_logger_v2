@@ -58,11 +58,11 @@ status_t ReadData();
 
 void NEOM9N_DebugCommCounters();
 
-void NEOM9N_UartInit();
+status_t NEOM9N_UartInit();
 
-void NEOM9N_GpsConfig();
+status_t NEOM9N_GpsConfig();
 
-void NEOM9N_Echo();
+void NEOM9N_Process();
 
 gps_time_t* NEOM9N_GpsTime();
 

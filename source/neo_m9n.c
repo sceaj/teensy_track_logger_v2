@@ -336,7 +336,7 @@ bool NEOM9N_WaitForAckOrNak(ubx_ack_payload_t *payload, uint32_t msecTimeout) {
     bool foundAck = false;
 
     uint32_t start = OSA_TimeGetMsec();
-    while (lookingForAckOrNak && (msecTimeout > OSA_TimeDiff(start, OSA_TimeGetMsec()))) {
+    while (lookingForAckOrNak && (msecTimeout > (OSA_TimeGetMsec() - start))) {
         for (int i = 0; i < 4; i++) {
             if (ubxFrameAvailable[i]) {
 
@@ -362,7 +362,7 @@ bool NEOM9N_WaitForAckOrNak(ubx_ack_payload_t *payload, uint32_t msecTimeout) {
     return foundAck;
 }
 
-void NEOM9N_UartInit() {
+status_t NEOM9N_UartInit() {
 
     lpuart_config_t config;
 
@@ -371,12 +371,16 @@ void NEOM9N_UartInit() {
     config.enableTx     = true;
     config.enableRx     = true;
 
-    LPUART_Init(NEOM9N_UART, &config, UART_CLK_FREQ);
-    (void)EnableIRQ(NEOM9N_IRQn);
-    NEOM9N_StartParser();
+    status_t uartStatus = LPUART_Init(NEOM9N_UART, &config, UART_CLK_FREQ);
+    if (kStatus_Success == uartStatus) {
+    	(void)EnableIRQ(NEOM9N_IRQn);
+    	NEOM9N_StartParser();
+    }
+
+    return uartStatus;
 }
 
-void NEOM9N_GpsConfig() {
+status_t NEOM9N_GpsConfig() {
 
     ubx_frame_t *ubxFrame = (ubx_frame_t*)g_txFrameBuffer;
 
@@ -384,69 +388,39 @@ void NEOM9N_GpsConfig() {
     UbxCfgValSetFrameInitialize(ubxFrame, 0x00, 0x01);
     UbxAppendConfigBit(ubxFrame, CFG_UART1OUTPROT_NMEA, false);
     UbxFrameFinalize(ubxFrame);
-    UbxDebugPrintFrame(ubxFrame);
 
     ubx_ack_payload_t ackPayload;
     ackPayload.messageClass = 0x06;
     ackPayload.messageId = 0x8A;
     status_t status = NEOM9N_SendFrameNonBlocking(ubxFrame);
     NEOM9N_WaitForAckOrNak(&ackPayload, 3000U);
-    PRINTF("Byte Counters  Tx: %d  Rx: %d\n", txByteCounter, rxByteCounter);
 
     uint32_t baudRate = 460800;
     PRINTF("Switching baud rate: %d\n", baudRate);
     UbxCfgValSetFrameInitialize(ubxFrame, 0x00, 0x01);
     UbxAppendConfig32(ubxFrame, CFG_UART1_BAUDRATE, baudRate);
     UbxFrameFinalize(ubxFrame);
-    UbxDebugPrintFrame(ubxFrame);
 
     status = NEOM9N_SendFrameNonBlocking(ubxFrame);
     NEOM9N_WaitForAckOrNak(&ackPayload, 1200U);
     status = LPUART_SetBaudRate(NEOM9N_UART, baudRate, UART_CLK_FREQ);
-    PRINTF("UART_SetBaudRate [%d]\n", status);
-    PRINTF("Byte Counters  Tx: %d  Rx: %d\n", txByteCounter, rxByteCounter);
-
+    PRINTF("LPUART_SetBaudRate [%d]\n", status);
 
     OSA_TimeDelay(5000U);
-    PRINTF("Requesting UBX POSLLH UBX_\n");
+    PRINTF("Requesting automotive dynamic model and UBX_NAV_PVT @ 25Hz\n");
     UbxCfgValSetFrameInitialize(ubxFrame, 0x00, 0x01);
-    UbxAppendConfig8(ubxFrame, CFG_MSGOUT_UBX_NAV_POSLLH_UART1, 1);
+    UbxAppendConfig8(ubxFrame, CFG_NAVSPG_DYNMODEL, CFG_NAVSPG_DYNMODEL_AUTOMOT);
     UbxAppendConfig8(ubxFrame, CFG_MSGOUT_UBX_NAV_PVT_UART1, 1);
-    UbxAppendConfig8(ubxFrame, CFG_MSGOUT_UBX_NAV_TIMEUTC_UART1, 10);
+    UbxAppendConfig16(ubxFrame, CFG_RATE_MEAS, 40);
     UbxFrameFinalize(ubxFrame);
-    UbxDebugPrintFrame(ubxFrame);
 
     status = NEOM9N_SendFrameNonBlocking(ubxFrame);
     NEOM9N_WaitForAckOrNak(&ackPayload, 5000U);
-    PRINTF("Byte Counters  Tx: %d  Rx: %d\n", txByteCounter, rxByteCounter);
 
-
-//    PRINTF("Turning off all protocols other than UBX on UART1\n");
-//    UbxCfgValSetFrameInitialize(ubxFrame, 0x00, 0x01);
-//    UbxAppendConfig32(ubxFrame, CFG_UART1_BAUDRATE, 115200U);
-//    UbxAppendConfigBit(ubxFrame, CFG_UART1INPROT_NMEA, false);
-//    UbxAppendConfigBit(ubxFrame, CFG_UART1INPROT_RTCM3X, false);
-//    UbxAppendConfigBit(ubxFrame, CFG_I2C_ENABLED, false);
-//    UbxAppendConfigBit(ubxFrame, CFG_USB_ENABLED, false);
-//    UbxFrameFinalize(ubxFrame);
-//    UbxDebugPrintFrame(ubxFrame);
-
-//    sendXfer.dataSize = sizeof(ubx_frame_t) + ubxFrame->payloadLength + 2;
-//    status = UART_TransferSendNonBlocking(NEOM9N_UART, &g_uartHandle, &sendXfer);
-//    PRINTF("UART_TransferSendNonBlocking [%d]\n", status);
-//
-//    PRINTF("Waiting for ACK/NAK\n");
-//    if (NEOM9N_WaitForAckOrNak(&ackPayload, 5000U)) {
-//        PRINTF("ACK Received!\n");
-//    } else {
-//        PRINTF("NAK Received\n");
-//    }
-
-//    UART_TransferStartRingBuffer(NEOM9N_UART, &g_uartHandle, g_rxRingBuffer, RX_RING_BUFFER_SIZE);
-//    memset(g_rxFrameBuffer, 0x00, sizeof(g_rxFrameBuffer));
+    return status;
 }
 
-void NEOM9N_Echo() {
+void NEOM9N_Process() {
 
     for (int i = 0; i < 4; i++) {
         if (ubxFrameAvailable[i]) {
