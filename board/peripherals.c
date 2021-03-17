@@ -68,7 +68,7 @@ instance:
       - debugEnable: 'false'
       - ignoreAck: 'false'
       - pinConfig: 'kLPI2C_2PinOpenDrain'
-      - baudRate_Hz: '200000'
+      - baudRate_Hz: '400000'
       - busIdleTimeout_ns: '0'
       - pinLowTimeout_ns: '0'
       - sdaGlitchFilterWidth_ns: '0'
@@ -86,12 +86,12 @@ instance:
         - userData: ''
       - flags: ''
       - slaveAddress: '0'
-      - direction: 'kLPI2C_Read'
+      - direction: 'kLPI2C_Write'
       - subaddress: '0'
       - subaddressSize: '1'
       - blocking_buffer: 'false'
       - enable_custom_buffer: 'false'
-      - dataSize: '32'
+      - dataSize: '1'
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS **********/
 /* clang-format on */
 const lpi2c_master_config_t LPI2C1_masterConfig = {
@@ -100,7 +100,7 @@ const lpi2c_master_config_t LPI2C1_masterConfig = {
   .debugEnable = false,
   .ignoreAck = false,
   .pinConfig = kLPI2C_2PinOpenDrain,
-  .baudRate_Hz = 200000UL,
+  .baudRate_Hz = 400000UL,
   .busIdleTimeout_ns = 0UL,
   .pinLowTimeout_ns = 0UL,
   .sdaGlitchFilterWidth_ns = 0U,
@@ -114,11 +114,11 @@ const lpi2c_master_config_t LPI2C1_masterConfig = {
 lpi2c_master_transfer_t LPI2C1_masterTransfer = {
   .flags = kLPI2C_TransferDefaultFlag,
   .slaveAddress = 0,
-  .direction = kLPI2C_Read,
+  .direction = kLPI2C_Write,
   .subaddress = 0,
   .subaddressSize = 1,
   .data = LPI2C1_masterBuffer,
-  .dataSize = 32
+  .dataSize = 1
 };
 lpi2c_master_handle_t LPI2C1_masterHandle;
 uint8_t LPI2C1_masterBuffer[LPI2C1_MASTER_BUFFER_SIZE];

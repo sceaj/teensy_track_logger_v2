@@ -11,15 +11,18 @@
 #include "gps.h"
 #include "neo_m9n.h"
 #include "logger.h"
+#include "sensor.h"
 #include "shell_task.h"
 
 extern TaskHandle_t g_BlinkTaskHandle;
 extern TaskHandle_t g_GpsTaskHandle;
 extern TaskHandle_t g_LoggerTaskHandle;
+extern TaskHandle_t g_SensorTaskHandle;
 extern TaskHandle_t g_ShellTaskHandle;
 
 static status_t s_loggerStatus;
 static status_t s_gpsStatus;
+static status_t s_sensorStatus;
 
 
 void StartTasks(void *pvParameters) {
@@ -39,6 +42,12 @@ void StartTasks(void *pvParameters) {
 	} else {
 		PRINTF("GPS initialization failed - not resuming task\n");
 	}
+//    if (kStatus_Success == s_sensorStatus) {
+//        vTaskResume(g_SensorTaskHandle);
+//        vTaskDelay(500);
+//    } else {
+//        PRINTF("Sensor initialization failed - not resuming task\n");
+//    }
 }
 
 void InitTask(void *pvParameters) {
@@ -46,6 +55,7 @@ void InitTask(void *pvParameters) {
     snvs_hp_rtc_datetime_t rtcDateTime;
 	s_loggerStatus = LoggerInit();
 	s_gpsStatus = GpsInit();
+	s_sensorStatus = SensorInit();
 
 	// Wait for GPS to acquire a valid time
 	// Wait up to 3 min - 720 250ms ticks

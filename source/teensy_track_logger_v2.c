@@ -57,17 +57,17 @@
 #include <stdio.h>
 #include "blinker.h"
 #include "board.h"
-#include "init.h"
+#include "clock_config.h"
+#include "FreeRTOS.h"
+#include "fsl_component_serial_manager.h"
+#include "fsl_debug_console.h"
+#include "fsl_device_registers.h"
 #include "gps.h"
+#include "init.h"
 #include "logger.h"
 #include "peripherals.h"
 #include "pin_mux.h"
-#include "clock_config.h"
-#include "fsl_device_registers.h"
-#include "fsl_debug_console.h"
-/* TODO: insert other include files here. */
-#include "FreeRTOS.h"
-#include "fsl_component_serial_manager.h"
+#include "sensor.h"
 #include "shell_task.h"
 #include "task.h"
 
@@ -79,6 +79,7 @@ TaskHandle_t g_InitTaskHandle = NULL;
 TaskHandle_t g_BlinkTaskHandle = NULL;
 TaskHandle_t g_GpsTaskHandle = NULL;
 TaskHandle_t g_LoggerTaskHandle = NULL;
+TaskHandle_t g_SensorTaskHandle = NULL;
 TaskHandle_t g_ShellTaskHandle = NULL;
 TaskHandle_t g_MsgGenTaskHandle = NULL;
 TaskHandle_t g_DebugConsoleTaskHandle = NULL;
@@ -123,11 +124,17 @@ int main(void) {
     } else {
     	PRINTF("Error: Failed to create Shell task\n");
     }
-    xStatus = xTaskCreate(GpsTask, "GPS", 384U, NULL, tskIDLE_PRIORITY + 3, &g_GpsTaskHandle);
+    xStatus = xTaskCreate(GpsTask, "GPS", 256U, NULL, tskIDLE_PRIORITY + 3, &g_GpsTaskHandle);
     if (xStatus == pdPASS) {
     	vTaskSuspend(g_GpsTaskHandle);
     } else {
     	PRINTF("Error: Failed to create GPS task\n");
+    }
+    xStatus = xTaskCreate(SensorTask, "Sensor", 256U, NULL, tskIDLE_PRIORITY + 4, &g_SensorTaskHandle);
+    if (xStatus == pdPASS) {
+        vTaskSuspend(g_SensorTaskHandle);
+    } else {
+        PRINTF("Error: Failed to create Sensors task\n");
     }
     xStatus = xTaskCreate(LoggerTask, "Logger", 384U, NULL, tskIDLE_PRIORITY + 5, &g_LoggerTaskHandle);
     if (xStatus == pdPASS) {

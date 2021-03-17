@@ -28,7 +28,7 @@ extern "C" {
 /* Definition of clock source */
 #define LPI2C1_CLOCK_FREQ 60000000UL
 /* Transfer buffer size */
-#define LPI2C1_MASTER_BUFFER_SIZE 32
+#define LPI2C1_MASTER_BUFFER_SIZE 1
 /* Definition of slave address */
 #define LPI2C1_MASTER_SLAVE_ADDRESS 0
 /* Definition of peripheral ID */

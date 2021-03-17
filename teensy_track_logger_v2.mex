@@ -48,12 +48,12 @@
                         <data>true</data>
                      </feature>
                   </dependency>
-                  <dependency resourceType="Peripheral" resourceId="LPI2C1" description="Peripheral LPI2C1 is not initialized" problem_level="1" source="Pins:BOARD_InitPins">
+                  <dependency resourceType="Peripheral" resourceId="LPI2C3" description="Peripheral LPI2C3 is not initialized" problem_level="1" source="Pins:BOARD_InitPins">
                      <feature name="initialized" evaluation="equal">
                         <data>true</data>
                      </feature>
                   </dependency>
-                  <dependency resourceType="Peripheral" resourceId="LPI2C3" description="Peripheral LPI2C3 is not initialized" problem_level="1" source="Pins:BOARD_InitPins">
+                  <dependency resourceType="Peripheral" resourceId="LPI2C1" description="Peripheral LPI2C1 is not initialized" problem_level="1" source="Pins:BOARD_InitPins">
                      <feature name="initialized" evaluation="equal">
                         <data>true</data>
                      </feature>
@@ -80,29 +80,33 @@
                   <pin peripheral="USDHC1" signal="usdhc_data, 1" pin_num="K1" pin_signal="GPIO_SD_B0_03"/>
                   <pin peripheral="USDHC1" signal="usdhc_data, 2" pin_num="H2" pin_signal="GPIO_SD_B0_04"/>
                   <pin peripheral="USDHC1" signal="usdhc_data, 3" pin_num="J2" pin_signal="GPIO_SD_B0_05"/>
-                  <pin peripheral="LPI2C1" signal="SCL" pin_num="J11" pin_signal="GPIO_AD_B1_00">
-                     <pin_features>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_22K_Ohm"/>
-                        <pin_feature name="open_drain" value="Enable"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="LPI2C1" signal="SDA" pin_num="K11" pin_signal="GPIO_AD_B1_01">
-                     <pin_features>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_22K_Ohm"/>
-                        <pin_feature name="open_drain" value="Enable"/>
-                     </pin_features>
-                  </pin>
                   <pin peripheral="LPI2C3" signal="SCL" pin_num="K10" pin_signal="GPIO_AD_B1_07">
                      <pin_features>
                         <pin_feature name="software_input_on" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_22K_Ohm"/>
+                        <pin_feature name="pull_up_down_config" value="Pull_Up_47K_Ohm"/>
+                        <pin_feature name="pull_keeper_enable" value="Enable"/>
                         <pin_feature name="open_drain" value="Enable"/>
                      </pin_features>
                   </pin>
                   <pin peripheral="LPI2C3" signal="SDA" pin_num="J12" pin_signal="GPIO_AD_B1_06">
                      <pin_features>
                         <pin_feature name="software_input_on" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_22K_Ohm"/>
+                        <pin_feature name="pull_up_down_config" value="Pull_Up_47K_Ohm"/>
+                        <pin_feature name="pull_keeper_enable" value="Enable"/>
+                        <pin_feature name="open_drain" value="Enable"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="LPI2C1" signal="SCL" pin_num="J11" pin_signal="GPIO_AD_B1_00">
+                     <pin_features>
+                        <pin_feature name="software_input_on" value="Enable"/>
+                        <pin_feature name="pull_up_down_config" value="Pull_Up_47K_Ohm"/>
+                        <pin_feature name="open_drain" value="Enable"/>
+                     </pin_features>
+                  </pin>
+                  <pin peripheral="LPI2C1" signal="SDA" pin_num="K11" pin_signal="GPIO_AD_B1_01">
+                     <pin_features>
+                        <pin_feature name="software_input_on" value="Enable"/>
+                        <pin_feature name="pull_up_down_config" value="Pull_Up_47K_Ohm"/>
                         <pin_feature name="open_drain" value="Enable"/>
                      </pin_features>
                   </pin>
@@ -319,7 +323,7 @@
                            <setting name="debugEnable" value="false"/>
                            <setting name="ignoreAck" value="false"/>
                            <setting name="pinConfig" value="kLPI2C_2PinOpenDrain"/>
-                           <setting name="baudRate_Hz" value="200000"/>
+                           <setting name="baudRate_Hz" value="400000"/>
                            <setting name="busIdleTimeout_ns" value="0"/>
                            <setting name="pinLowTimeout_ns" value="0"/>
                            <setting name="sdaGlitchFilterWidth_ns" value="0"/>
@@ -344,12 +348,12 @@
                               <selected/>
                            </set>
                            <setting name="slaveAddress" value="0"/>
-                           <setting name="direction" value="kLPI2C_Read"/>
+                           <setting name="direction" value="kLPI2C_Write"/>
                            <setting name="subaddress" value="0"/>
                            <setting name="subaddressSize" value="1"/>
                            <setting name="blocking_buffer" value="false"/>
                            <setting name="enable_custom_buffer" value="false"/>
-                           <setting name="dataSize" value="32"/>
+                           <setting name="dataSize" value="1"/>
                         </struct>
                      </config_set>
                   </instance>

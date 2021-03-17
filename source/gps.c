@@ -40,7 +40,6 @@ status_t GpsInit(void) {
 	if (kStatus_Success == status) {
 		status = NEOM9N_GpsConfig();
 	}
-	// TODO: Use real status
 	return status;
 }
 
@@ -57,34 +56,34 @@ void GpsTask(void *pvParameters) {
 
         if ((++outputCounter % 50) == 0) {
             gps_time_t *gpsTime = NEOM9N_GpsTime();
-            PRINTF(
-                    "GPS Time  iTOW:%u  year:%u month:%u day:%u hour:%u min:%u sec:%u nano:%d valid:0x%X flags2:0x%X\n",
-                    gpsTime->iTOW, gpsTime->year, gpsTime->month,
-                    gpsTime->day, gpsTime->hour, gpsTime->min, gpsTime->sec,
-                    gpsTime->nano, gpsTime->valid, gpsTime->flags2);
+//            PRINTF(
+//                    "GPS Time  iTOW:%u  year:%u month:%u day:%u hour:%u min:%u sec:%u nano:%d valid:0x%X flags2:0x%X\n",
+//                    gpsTime->iTOW, gpsTime->year, gpsTime->month,
+//                    gpsTime->day, gpsTime->hour, gpsTime->min, gpsTime->sec,
+//                    gpsTime->nano, gpsTime->valid, gpsTime->flags2);
             SNVS_HP_RTC_GetDatetime(SNVS, &rtcDateTime);
-            PRINTF(
-                    "RTC Time                 year:%u month:%u day:%u hour:%u min:%u sec:%u\n",
-                    rtcDateTime.year, rtcDateTime.month,
-                    rtcDateTime.day, rtcDateTime.hour,
-                    rtcDateTime.minute, rtcDateTime.second);
+//            PRINTF(
+//                    "RTC Time                 year:%u month:%u day:%u hour:%u min:%u sec:%u\n",
+//                    rtcDateTime.year, rtcDateTime.month,
+//                    rtcDateTime.day, rtcDateTime.hour,
+//                    rtcDateTime.minute, rtcDateTime.second);
 
 
             gps_position_t *gpsPosition = NEOM9N_GpsPosition();
-            PRINTF(
-                    "GPS Position  iTOW:%u lon:%d lat:%d height:%d hMSL:%u hAcc:%u fixType:%u flags:0x%X\n",
-                    gpsPosition->iTOW, gpsPosition->lon, gpsPosition->lat,
-                    gpsPosition->height, gpsPosition->hMSL,
-                    gpsPosition->hAcc, gpsPosition->fixType,
-                    gpsPosition->flags);
+//            PRINTF(
+//                    "GPS Position  iTOW:%u lon:%d lat:%d height:%d hMSL:%u hAcc:%u fixType:%u flags:0x%X\n",
+//                    gpsPosition->iTOW, gpsPosition->lon, gpsPosition->lat,
+//                    gpsPosition->height, gpsPosition->hMSL,
+//                    gpsPosition->hAcc, gpsPosition->fixType,
+//                    gpsPosition->flags);
 
             gps_velocity_t *gpsVelocity = NEOM9N_GpsVelocity();
-            PRINTF(
-                    "GPS Velocity  iTOW:%u gSpeed:%d headMot:%d sAcc:%u headAcc:%u pDOP:%u flags:0x%X\n",
-                    gpsVelocity->iTOW, gpsVelocity->gSpeed,
-                    gpsVelocity->headMot, gpsVelocity->sAcc,
-                    gpsVelocity->headAcc, gpsVelocity->pDOP,
-                    gpsVelocity->flags);
+//            PRINTF(
+//                    "GPS Velocity  iTOW:%u gSpeed:%d headMot:%d sAcc:%u headAcc:%u pDOP:%u flags:0x%X\n",
+//                    gpsVelocity->iTOW, gpsVelocity->gSpeed,
+//                    gpsVelocity->headMot, gpsVelocity->sAcc,
+//                    gpsVelocity->headAcc, gpsVelocity->pDOP,
+//                    gpsVelocity->flags);
         }
         // Wait for the next cycle.
         vTaskDelayUntil(&xLastWakeTime, xPeriod);
