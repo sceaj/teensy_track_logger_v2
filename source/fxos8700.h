@@ -21,6 +21,7 @@ enum {
 // UserData specified for specific requests
 enum {
     fxos8700_WhoAmI         = 0xC701U,
+    fxos8700_Config         = 0xC702U,
     fxos8700_Acceleration   = 0xC703U,
     fxos8700_Magnetometer   = 0xC704U,
 };

@@ -42,12 +42,12 @@ void StartTasks(void *pvParameters) {
 	} else {
 		PRINTF("GPS initialization failed - not resuming task\n");
 	}
-//    if (kStatus_Success == s_sensorStatus) {
-//        vTaskResume(g_SensorTaskHandle);
-//        vTaskDelay(500);
-//    } else {
-//        PRINTF("Sensor initialization failed - not resuming task\n");
-//    }
+    if (kStatus_Success == s_sensorStatus) {
+        vTaskResume(g_SensorTaskHandle);
+        vTaskDelay(500);
+    } else {
+        PRINTF("Sensor initialization failed - not resuming task\n");
+    }
 }
 
 void InitTask(void *pvParameters) {

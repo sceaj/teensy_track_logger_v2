@@ -21,6 +21,7 @@ enum {
 // UserData specified for specific requests
 enum {
     fxas21002_WhoAmI        = 0xD701U,
+    fxas21002_Config        = 0xD702U,
     fxas21002_Gyro          = 0xD703U,
 };
 

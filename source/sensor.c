@@ -49,6 +49,10 @@ void Sensor_CompletionCallback(LPI2C_Type *base,
         PRINTF("FXOS8700 WhoAmI: 0x%X  [%d]\n", (*(uint8_t*)handle->transfer.data), completionStatus);
         break;
 
+    case fxos8700_Config:
+        PRINTF("FXOS8700 Config: [%d]\n", completionStatus);
+        break;
+
     case fxos8700_Acceleration:
         break;
 
@@ -57,6 +61,10 @@ void Sensor_CompletionCallback(LPI2C_Type *base,
 
     case fxas21002_WhoAmI:
         PRINTF("FXAS21002 WhoAmI: 0x%X  [%d]\n", (*(uint8_t*)handle->transfer.data), completionStatus);
+        break;
+
+    case fxas21002_Config:
+        PRINTF("FXAS21002 Config: [%d]\n", completionStatus);
         break;
 
     case fxas21002_Gyro:
@@ -70,18 +78,20 @@ status_t SensorInit(void) {
     LPI2C1_masterHandle.completionCallback = Sensor_CompletionCallback;
 
     busy = true;
-    FXOS8700_WhoAmI();
-    while (busy) {
-    }
-    busy = true;
-    FXAS21002_WhoAmI();
-    while (busy) {
-    }
-//    status_t status = FXOS8700_Configure();
-//    if (kStatus_Success == status) {
-//        status = FXAS21002_Configure();
+//    FXOS8700_WhoAmI();
+//    busy = true;
+//    FXAS21002_WhoAmI();
+//    while (busy) {
 //    }
-//    return status;
+    status_t status = FXOS8700_Configure();
+    if (kStatus_Success == status) {
+        while (busy) {
+        }
+        status = FXAS21002_Configure();
+        while (busy) {
+        }
+    }
+    return status;
 }
 
 void SensorTask( void *pvParameters ) {

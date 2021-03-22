@@ -53,44 +53,59 @@ status_t FXAS21002_WhoAmI() {
 status_t FXAS21002_Configure() {
 
     uint8_t i2cData[2];
-    i2cData[0]= FXAS21002_WHOAMI;
-    i2cData[1] = 0x00;
 
     lpi2c_master_transfer_t i2cXfer;
     memset(&i2cXfer, 0, sizeof(i2cXfer));
     i2cXfer.slaveAddress = FXAS21002_I2C_ADDR;
-    i2cXfer.direction = kLPI2C_Write;
-    i2cXfer.subaddress = 0;
-    i2cXfer.subaddressSize = 0;
+    i2cXfer.direction = kLPI2C_Read;
+    i2cXfer.subaddress = FXAS21002_WHOAMI;
+    i2cXfer.subaddressSize = 1;
     i2cXfer.data = i2cData;
     i2cXfer.dataSize = 1;
-    i2cXfer.flags = kLPI2C_TransferNoStopFlag;
+    i2cXfer.flags = kLPI2C_TransferDefaultFlag;
 
-    status_t configStatus = LPI2C_MasterTransferBlocking(FXAS21002_I2C, &i2cXfer);
+    FXAS21002_I2C_HANDLE.userData = (void*)fxas21002_Config;
+
+    status_t configStatus = LPI2C_MasterTransferNonBlocking(FXAS21002_I2C, &FXAS21002_I2C_HANDLE, &i2cXfer);
     if (configStatus == kStatus_Success) {
-        i2cXfer.direction = kLPI2C_Read;
-        i2cXfer.flags = kLPI2C_TransferRepeatedStartFlag;
-        configStatus = LPI2C_MasterTransferBlocking(FXAS21002_I2C, &i2cXfer);
-        if (configStatus == kStatus_Success) configStatus = (i2cData[0] == 0xD7) ? kStatus_Success : kStatus_FXAS21002_WrongDevice;
+        while (FXAS21002_I2C_HANDLE.state) {
+            // Wait for transfer to complete
+        }
+        configStatus = (i2cData[0] == 0xD7) ? kStatus_Success : kStatus_FXAS21002_WrongDevice;
     }
 
     SDK_DelayAtLeastUs(100U, BOARD_BOOTCLOCKRUN_CORE_CLOCK);
     if (configStatus == kStatus_Success) {
         i2cXfer.direction = kLPI2C_Write;
-        i2cXfer.dataSize = 2;
+        i2cXfer.subaddress = FXAS21002_CTRL_REG0;
+        i2cXfer.subaddressSize = 1;
+        i2cXfer.data = i2cData;
+        i2cXfer.dataSize = 1;
         i2cXfer.flags = kLPI2C_TransferDefaultFlag;
-        i2cData[0] = FXAS21002_CTRL_REG0;
         // max LPF cut-off freq, no HPF, +/-1000dps full scall
-        i2cData[1] = 0x01;
-        configStatus = LPI2C_MasterTransferBlocking(FXAS21002_I2C, &i2cXfer);
+        i2cData[0] = 0x01;
+        i2cData[1] = 0x00;
+        configStatus = LPI2C_MasterTransferNonBlocking(FXAS21002_I2C, &FXAS21002_I2C_HANDLE, &i2cXfer);
+        while (FXAS21002_I2C_HANDLE.state) {
+            // Wait for transfer to complete
+        }
     }
 
     SDK_DelayAtLeastUs(100U, BOARD_BOOTCLOCKRUN_CORE_CLOCK);
     if (configStatus == kStatus_Success) {
-        i2cData[0] = FXAS21002_CTRL_REG1;
+        i2cXfer.direction = kLPI2C_Write;
+        i2cXfer.subaddress = FXAS21002_CTRL_REG1;
+        i2cXfer.subaddressSize = 1;
+        i2cXfer.data = i2cData;
+        i2cXfer.dataSize = 1;
+        i2cXfer.flags = kLPI2C_TransferDefaultFlag;
         // 50hz, active mode
-        i2cData[1] = 0x12;
-        configStatus = LPI2C_MasterTransferBlocking(FXAS21002_I2C, &i2cXfer);
+        i2cData[0] = 0x12;
+        i2cData[1] = 0x00;
+        configStatus = LPI2C_MasterTransferNonBlocking(FXAS21002_I2C, &FXAS21002_I2C_HANDLE, &i2cXfer);
+        while (FXAS21002_I2C_HANDLE.state) {
+            // Wait for transfer to complete
+        }
     }
 
     return configStatus;

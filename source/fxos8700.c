@@ -51,68 +51,110 @@ status_t FXOS8700_WhoAmI() {
 status_t FXOS8700_Configure() {
 
     uint8_t i2cData[2];
-    i2cData[0]= FXOS8700_WHOAMI;
-    i2cData[1] = 0x00;
 
     lpi2c_master_transfer_t i2cXfer;
     memset(&i2cXfer, 0, sizeof(i2cXfer));
     i2cXfer.slaveAddress = FXOS8700_I2C_ADDR;
-    i2cXfer.direction = kLPI2C_Write;
-    i2cXfer.subaddress = 0;
-    i2cXfer.subaddressSize = 0;
+    i2cXfer.direction = kLPI2C_Read;
+    i2cXfer.subaddress = FXOS8700_WHOAMI;
+    i2cXfer.subaddressSize = 1;
     i2cXfer.data = i2cData;
     i2cXfer.dataSize = 1;
-    i2cXfer.flags = kLPI2C_TransferNoStopFlag;
+    i2cXfer.flags = kLPI2C_TransferDefaultFlag;
 
-    status_t configStatus = LPI2C_MasterTransferBlocking(FXOS8700_I2C, &i2cXfer);
+    FXOS8700_I2C_HANDLE.userData = (void*)fxos8700_Config;
+
+    status_t configStatus = LPI2C_MasterTransferNonBlocking(FXOS8700_I2C, &FXOS8700_I2C_HANDLE, &i2cXfer);
     if (configStatus == kStatus_Success) {
-        i2cXfer.direction = kLPI2C_Read;
-        i2cXfer.flags = kLPI2C_TransferRepeatedStartFlag;
-        configStatus = LPI2C_MasterTransferBlocking(FXOS8700_I2C, &i2cXfer);
-        if (configStatus == kStatus_Success) configStatus = (i2cData[0] == 0xC7) ? kStatus_Success : kStatus_FXOS8700_WrongDevice;
+        while (FXOS8700_I2C_HANDLE.state) {
+            // Wait for transfer to be complete (and the handle returns to idle state)
+        }
+        configStatus = (i2cData[0] == 0xC7) ? kStatus_Success : kStatus_FXOS8700_WrongDevice;
     }
 
     SDK_DelayAtLeastUs(100U, BOARD_BOOTCLOCKRUN_CORE_CLOCK);
     if (configStatus == kStatus_Success) {
         i2cXfer.direction = kLPI2C_Write;
-        i2cXfer.dataSize = 2;
+        i2cXfer.subaddress = FXOS8700_CTRL_REG1;
+        i2cXfer.subaddressSize = 1;
+        i2cXfer.data = i2cData;
+        i2cXfer.dataSize = 1;
         i2cXfer.flags = kLPI2C_TransferDefaultFlag;
         // Go into standby mode
-        i2cData[0] = FXOS8700_CTRL_REG1;
+        i2cData[0] = 0x00;
         i2cData[1] = 0x00;
-        configStatus = LPI2C_MasterTransferBlocking(FXOS8700_I2C, &i2cXfer);
+        configStatus = LPI2C_MasterTransferNonBlocking(FXOS8700_I2C, &FXOS8700_I2C_HANDLE, &i2cXfer);
+        while (FXOS8700_I2C_HANDLE.state) {
+            // Wait for transfer to be complete (and the handle returns to idle state)
+        }
     }
 
     SDK_DelayAtLeastUs(100U, BOARD_BOOTCLOCKRUN_CORE_CLOCK);
     if (configStatus == kStatus_Success) {
+        i2cXfer.direction = kLPI2C_Write;
+        i2cXfer.subaddress = FXOS8700_M_CTRL_REG1;
+        i2cXfer.subaddressSize = 1;
+        i2cXfer.data = i2cData;
+        i2cXfer.dataSize = 1;
+        i2cXfer.flags = kLPI2C_TransferDefaultFlag;
         // Select hybrid mode, 4x oversampling
-        i2cData[0] = FXOS8700_M_CTRL_REG1;
-        i2cData[1] = 0x13;
-        configStatus = LPI2C_MasterTransferBlocking(FXOS8700_I2C, &i2cXfer);
+        i2cData[0] = 0x13;
+        i2cData[1] = 0x00;
+        configStatus = LPI2C_MasterTransferNonBlocking(FXOS8700_I2C, &FXOS8700_I2C_HANDLE, &i2cXfer);
+        while (FXOS8700_I2C_HANDLE.state) {
+            // Wait for transfer to be complete (and the handle returns to idle state)
+        }
     }
 
     SDK_DelayAtLeastUs(100U, BOARD_BOOTCLOCKRUN_CORE_CLOCK);
     if (configStatus == kStatus_Success) {
+        i2cXfer.direction = kLPI2C_Write;
+        i2cXfer.subaddress = FXOS8700_M_CTRL_REG2;
+        i2cXfer.subaddressSize = 1;
+        i2cXfer.data = i2cData;
+        i2cXfer.dataSize = 1;
+        i2cXfer.flags = kLPI2C_TransferDefaultFlag;
         // Select hybrid autoinc mode
-        i2cData[0] = FXOS8700_M_CTRL_REG2;
-        i2cData[1] = 0x20;
-        configStatus = LPI2C_MasterTransferBlocking(FXOS8700_I2C, &i2cXfer);
+        i2cData[0] = 0x20;
+        i2cData[1] = 0x00;
+        configStatus = LPI2C_MasterTransferNonBlocking(FXOS8700_I2C, &FXOS8700_I2C_HANDLE, &i2cXfer);
+        while (FXOS8700_I2C_HANDLE.state) {
+            // Wait for transfer to be complete (and the handle returns to idle state)
+        }
     }
 
     SDK_DelayAtLeastUs(100U, BOARD_BOOTCLOCKRUN_CORE_CLOCK);
     if (configStatus == kStatus_Success) {
+        i2cXfer.direction = kLPI2C_Write;
+        i2cXfer.subaddress = FXOS8700_XYZ_DATA_CFG;
+        i2cXfer.subaddressSize = 1;
+        i2cXfer.data = i2cData;
+        i2cXfer.dataSize = 1;
+        i2cXfer.flags = kLPI2C_TransferDefaultFlag;
         // Select +/-4g scale
-        i2cData[0] = FXOS8700_XYZ_DATA_CFG;
-        i2cData[1] = 0x01;
-        configStatus = LPI2C_MasterTransferBlocking(FXOS8700_I2C, &i2cXfer);
+        i2cData[0] = 0x01;
+        i2cData[1] = 0x00;
+        configStatus = LPI2C_MasterTransferNonBlocking(FXOS8700_I2C, &FXOS8700_I2C_HANDLE, &i2cXfer);
+        while (FXOS8700_I2C_HANDLE.state) {
+            // Wait for transfer to be complete (and the handle returns to idle state)
+        }
     }
 
     SDK_DelayAtLeastUs(100U, BOARD_BOOTCLOCKRUN_CORE_CLOCK);
     if (configStatus == kStatus_Success) {
+        i2cXfer.direction = kLPI2C_Write;
+        i2cXfer.subaddress = FXOS8700_CTRL_REG1;
+        i2cXfer.subaddressSize = 1;
+        i2cXfer.data = i2cData;
+        i2cXfer.dataSize = 1;
+        i2cXfer.flags = kLPI2C_TransferDefaultFlag;
         // Select 25Hz (hybrid), low-noise, active
-        i2cData[0] = FXOS8700_CTRL_REG1;
-        i2cData[1] = 0x25;
-        configStatus = LPI2C_MasterTransferBlocking(FXOS8700_I2C, &i2cXfer);
+        i2cData[0] = 0x25;
+        i2cData[1] = 0x00;
+        configStatus = LPI2C_MasterTransferNonBlocking(FXOS8700_I2C, &FXOS8700_I2C_HANDLE, &i2cXfer);
+        while (FXOS8700_I2C_HANDLE.state) {
+            // Wait for transfer to be complete (and the handle returns to idle state)
+        }
     }
 
     return configStatus;
