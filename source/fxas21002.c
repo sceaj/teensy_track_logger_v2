@@ -2,7 +2,27 @@
  * fxas21002.c
  *
  *  Created on: Mar 11, 2021
- *      Author: jrosen
+ *      Author: sceaj
+ *
+ * Copyright (c) 2021 Jeff Rosen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 #include "fxas21002.h"
@@ -23,9 +43,7 @@
 #define FXAS21002_CTRL_REG3     0x15
 #define FXAS21002_WHOAMI_VAL    0xD7
 
-static uint8_t          s_flags;
-static sensor_gyro_t    s_gyro;
-
+uint8_t fxas21002SensorData[7];
 
 status_t FXAS21002_WhoAmI() {
 
@@ -112,45 +130,23 @@ status_t FXAS21002_Configure() {
 
 }
 
-uint8_t FXAS21002_Flags() {
-    return s_flags;
-}
-
-sensor_gyro_t* FXAS21002_Gyro() {
-    return &s_gyro;
-}
-
-status_t FXAS21002_Process() {
-
-    uint8_t i2cReg = 0x00;
-    uint8_t sensorData[7];
+status_t FXAS21002_RequestData() {
 
     lpi2c_master_transfer_t i2cXfer;
     memset(&i2cXfer, 0, sizeof(i2cXfer));
     i2cXfer.slaveAddress = FXAS21002_I2C_ADDR;
-    i2cXfer.direction = kLPI2C_Write;
-    i2cXfer.subaddress = 0;
-    i2cXfer.subaddressSize = 0;
-    i2cXfer.data = &i2cReg;
-    i2cXfer.dataSize = 1;
-    i2cXfer.flags = kLPI2C_TransferNoStopFlag;
+    i2cXfer.direction = kLPI2C_Read;
+    i2cXfer.subaddress = FXAS21002_STATUS;
+    i2cXfer.subaddressSize = 1;
+    i2cXfer.data = fxas21002SensorData;
+    i2cXfer.dataSize = 7;
+    i2cXfer.flags = kLPI2C_TransferDefaultFlag;
 
-    status_t i2cStatus = LPI2C_MasterTransferBlocking(FXAS21002_I2C, &i2cXfer);
+    FXAS21002_I2C_HANDLE.userData = (void*)fxas21002_Data;
+
+    status_t i2cStatus = LPI2C_MasterTransferNonBlocking(FXAS21002_I2C, &FXAS21002_I2C_HANDLE, &i2cXfer);
     if (i2cStatus == kStatus_Success) {
-        i2cXfer.direction = kLPI2C_Read;
-        i2cXfer.data = sensorData;
-        i2cXfer.dataSize = sizeof(sensorData);
-        i2cXfer.flags = kLPI2C_TransferRepeatedStartFlag;
-        i2cStatus = LPI2C_MasterTransferBlocking(FXAS21002_I2C, &i2cXfer);
-        if (i2cStatus == kStatus_Success) {
-            s_flags = sensorData[0];
-            int16_t rawX = (int16_t)(sensorData[1]<<8 | sensorData[2]);
-            s_gyro.x = (((rawX * 625) + 312) / 20480);
-            int16_t rawY = (int16_t)(sensorData[3]<<8 | sensorData[4]);
-            s_gyro.y = (((rawY * 625) + 312) / 20480);
-            int16_t rawZ = (int16_t)(sensorData[5]<<8 | sensorData[6]);
-            s_gyro.z = (((rawZ * 625) + 312) / 20480);
-        }
+        i2cStatus = kStatus_FXAS21002_BusBusy;
     }
 
     return i2cStatus;

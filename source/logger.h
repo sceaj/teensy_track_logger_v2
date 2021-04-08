@@ -2,7 +2,7 @@
  * logger.h
  *
  *  Created on: Feb 6, 2021
- *      Author: jrosen
+ *      Author: sceaj
  *
  *      MIT License
  *
@@ -33,7 +33,19 @@
 #include "ff.h"
 #include "fsl_sd_disk.h"
 
-extern FATFS g_fileSystem;
+#define kStatusGroup_LOGGER 203
+enum {
+    kStatus_LOGGER_NoDir = MAKE_STATUS(kStatusGroup_LOGGER, 0),
+    kStatus_LOGGER_Error1 = MAKE_STATUS(kStatusGroup_LOGGER, 1),
+    kStatus_LOGGER_Error2 = MAKE_STATUS(kStatusGroup_LOGGER, 2),
+    kStatus_LOGGER_Error3 = MAKE_STATUS(kStatusGroup_LOGGER, 3),
+};
+
+extern QueueHandle_t dataLogQueue;
+extern QueueHandle_t debugLogQueue;
+
+void LOGGER_WriteDebug(const char* message);
+void LOGGER_WriteDebugFromISR(const char* message);
 
 status_t LoggerInit(void);
 

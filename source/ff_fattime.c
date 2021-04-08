@@ -28,6 +28,7 @@
  */
 
 #include "ff.h"
+#include "fsl_debug_console.h"
 #include "fsl_snvs_hp.h"
 
 typedef struct fatfs_ftime {
@@ -60,6 +61,13 @@ DWORD get_fattime(void) {
     timestamp.fileTime.hour = rtcDateTime.hour;
     timestamp.fileTime.minute = rtcDateTime.minute;
     timestamp.fileTime.second = rtcDateTime.second / 2;
+    PRINTF("File Time: %d-%d-%dT%d:%d:%d\n",
+            timestamp.fileTime.year,
+            timestamp.fileTime.month,
+            timestamp.fileTime.day,
+            timestamp.fileTime.hour,
+            timestamp.fileTime.minute,
+            timestamp.fileTime.second);
 
     return timestamp.value;
 }

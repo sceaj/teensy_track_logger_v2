@@ -2,7 +2,27 @@
  * neo_m9n.c
  *
  *  Created on: Feb 21, 2021
- *      Author: jrosen
+ *      Author: sceaj
+ *
+ * Copyright (c) 2021 Jeff Rosen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 #include "neo_m9n.h"
@@ -51,10 +71,6 @@ volatile uint32_t ubxBufferOverflowCounter;
 static uint8_t s_uartIrqRxBuffer[16];
 
 static ubx_parser_handle_t ubxParserHandle;
-
-static gps_time_t      s_gps_time;
-static gps_position_t  s_gps_position;
-static gps_velocity_t  s_gps_velocity;
 
 
 /*
@@ -420,56 +436,50 @@ status_t NEOM9N_GpsConfig() {
     return status;
 }
 
-void NEOM9N_Process() {
+bool NEOM9N_Process(gps_time_t* time, gps_position_t* position, gps_velocity_t* velocity) {
+
+    bool dataAvailable = false;
 
     for (int i = 0; i < 4; i++) {
         if (ubxFrameAvailable[i]) {
             ubx_frame_t *ubxFrame = UbxFrameBuffer(i);
             if (UbxFrameIsMessage(ubxFrame, UBX_NAV_CLASS, UBX_NAV_PVT_ID)) {
                 ubx_nav_pvt_t *ubxNavPvt = (ubx_nav_pvt_t*)(ubxFrame + 1);
-                s_gps_time.iTOW = ubxNavPvt->iTOW;
-                s_gps_time.year = ubxNavPvt->year;
-                s_gps_time.month = ubxNavPvt->month;
-                s_gps_time.day = ubxNavPvt->day;
-                s_gps_time.hour = ubxNavPvt->hour;
-                s_gps_time.min = ubxNavPvt->min;
-                s_gps_time.sec = ubxNavPvt->sec;
-                s_gps_time.nano = ubxNavPvt->nano;
-                s_gps_time.valid = ubxNavPvt->valid;
-                s_gps_time.flags2 = ubxNavPvt->flags2;
+                time->year = ubxNavPvt->year;
+                time->month = ubxNavPvt->month;
+                time->day = ubxNavPvt->day;
+                time->hour = ubxNavPvt->hour;
+                time->min = ubxNavPvt->min;
+                time->sec = ubxNavPvt->sec;
+                time->millis = ubxNavPvt->nano / 1000000;
+                time->valid = ubxNavPvt->valid;
+                time->flags2 = ubxNavPvt->flags2;
 
-                s_gps_position.iTOW = ubxNavPvt->iTOW;
-                s_gps_position.lon = ubxNavPvt->lon;
-                s_gps_position.lat = ubxNavPvt->lat;
-                s_gps_position.height = ubxNavPvt->height;
-                s_gps_position.hMSL = ubxNavPvt->hMSL;
-                s_gps_position.hAcc = ubxNavPvt->hAcc;
-                s_gps_position.fixType = ubxNavPvt->fixType;
-                s_gps_position.flags = ubxNavPvt->flags;
+                if (position != NULL) {
+                    position->lon = ubxNavPvt->lon;
+                    position->lat = ubxNavPvt->lat;
+                    position->hMSL = ubxNavPvt->hMSL;
+                    position->hAcc = ubxNavPvt->hAcc;
+                    position->fixType = ubxNavPvt->fixType;
+                    position->flags = ubxNavPvt->flags;
+                    position->flags3 = ubxNavPvt->flags3;
+                }
 
-                s_gps_velocity.iTOW = ubxNavPvt->iTOW;
-                s_gps_velocity.gSpeed = ubxNavPvt->gSpeed;
-                s_gps_velocity.headMot = ubxNavPvt->headMot;
-                s_gps_velocity.sAcc = ubxNavPvt->sAcc;
-                s_gps_velocity.headAcc = ubxNavPvt->headAcc;
-                s_gps_velocity.pDOP = ubxNavPvt->pDOP;
-                s_gps_velocity.flags = ubxNavPvt->flags;
+                if (velocity != NULL) {
+                    velocity->gSpeed = ubxNavPvt->gSpeed;
+                    velocity->headMot = ubxNavPvt->headMot;
+                    velocity->sAcc = ubxNavPvt->sAcc;
+                    velocity->headAcc = ubxNavPvt->headAcc;
+                    velocity->pDOP = ubxNavPvt->pDOP;
+                    velocity->flags = ubxNavPvt->flags;
+                }
+
+                dataAvailable = true;
             }
             memset(UbxFrameBuffer(i), 0x00, 128);
             ubxFrameAvailable[i] = false;
         }
     }
-}
 
-gps_time_t* NEOM9N_GpsTime() {
-    return &s_gps_time;
+    return dataAvailable;
 }
-
-gps_position_t* NEOM9N_GpsPosition() {
-    return &s_gps_position;
-}
-
-gps_velocity_t* NEOM9N_GpsVelocity() {
-    return &s_gps_velocity;
-}
-

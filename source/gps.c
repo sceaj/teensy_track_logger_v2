@@ -31,9 +31,39 @@
 #include "FreeRTOS.h"
 #include "fsl_debug_console.h"
 #include "fsl_snvs_hp.h"
+#include "logger.h"
+#include "logrecord.h"
 #include "neo_m9n.h"
+#include "queue.h"
 #include "task.h"
 
+typedef struct gps_time_record {
+    record_header_t     header;
+    gps_time_t          gpsTime;
+    uint8_t             unused[11];
+    uint8_t             chkA;
+    uint8_t             chkB;
+} log_gps_time_t;
+
+typedef struct gps_position_record {
+    record_header_t     header;
+    gps_position_t      gpsPosition;
+    uint8_t             unused[3];
+    uint8_t             chkA;
+    uint8_t             chkB;
+} log_gps_position_t;
+
+typedef struct gps_velocity_record {
+    record_header_t     header;
+    gps_velocity_t      gpsVelocity;
+    uint8_t             unused[3];
+    uint8_t             chkA;
+    uint8_t             chkB;
+} log_gps_velocity_t;
+
+static log_gps_time_t       s_timeRecord;
+static log_gps_position_t   s_positionRecord;
+static log_gps_velocity_t   s_velocityRecord;
 
 status_t GpsInit(void) {
 	status_t status = NEOM9N_UartInit();
@@ -45,46 +75,29 @@ status_t GpsInit(void) {
 
 void GpsTask(void *pvParameters) {
 
-    const TickType_t xPeriod = 20;
+    const TickType_t xPeriod = 5;
     TickType_t xLastWakeTime = xTaskGetTickCount();
     uint32_t outputCounter = 0U;
-    snvs_hp_rtc_datetime_t rtcDateTime;
+
+    LogRecordHeaderInit(&s_timeRecord.header, LOGRECORD_CLASS_GPS, GPS_TIME);
+    LogRecordHeaderInit(&s_positionRecord.header, LOGRECORD_CLASS_GPS, GPS_POSITION);
+    LogRecordHeaderInit(&s_velocityRecord.header, LOGRECORD_CLASS_GPS, GPS_VELOCITY);
 
     for (;;) {
 
-        NEOM9N_Process();
-
-        if ((++outputCounter % 50) == 0) {
-            gps_time_t *gpsTime = NEOM9N_GpsTime();
-//            PRINTF(
-//                    "GPS Time  iTOW:%u  year:%u month:%u day:%u hour:%u min:%u sec:%u nano:%d valid:0x%X flags2:0x%X\n",
-//                    gpsTime->iTOW, gpsTime->year, gpsTime->month,
-//                    gpsTime->day, gpsTime->hour, gpsTime->min, gpsTime->sec,
-//                    gpsTime->nano, gpsTime->valid, gpsTime->flags2);
-            SNVS_HP_RTC_GetDatetime(SNVS, &rtcDateTime);
-//            PRINTF(
-//                    "RTC Time                 year:%u month:%u day:%u hour:%u min:%u sec:%u\n",
-//                    rtcDateTime.year, rtcDateTime.month,
-//                    rtcDateTime.day, rtcDateTime.hour,
-//                    rtcDateTime.minute, rtcDateTime.second);
-
-
-            gps_position_t *gpsPosition = NEOM9N_GpsPosition();
-//            PRINTF(
-//                    "GPS Position  iTOW:%u lon:%d lat:%d height:%d hMSL:%u hAcc:%u fixType:%u flags:0x%X\n",
-//                    gpsPosition->iTOW, gpsPosition->lon, gpsPosition->lat,
-//                    gpsPosition->height, gpsPosition->hMSL,
-//                    gpsPosition->hAcc, gpsPosition->fixType,
-//                    gpsPosition->flags);
-
-            gps_velocity_t *gpsVelocity = NEOM9N_GpsVelocity();
-//            PRINTF(
-//                    "GPS Velocity  iTOW:%u gSpeed:%d headMot:%d sAcc:%u headAcc:%u pDOP:%u flags:0x%X\n",
-//                    gpsVelocity->iTOW, gpsVelocity->gSpeed,
-//                    gpsVelocity->headMot, gpsVelocity->sAcc,
-//                    gpsVelocity->headAcc, gpsVelocity->pDOP,
-//                    gpsVelocity->flags);
+        if (NEOM9N_Process(&s_timeRecord.gpsTime, &s_positionRecord.gpsPosition, &s_velocityRecord.gpsVelocity)) {
+            s_timeRecord.header.timestamp = xTaskGetTickCount();
+            LogRecordFinalize((log_record_t*)&s_timeRecord);
+            xQueueSend(dataLogQueue, &s_timeRecord, 2U);
+            s_positionRecord.header.timestamp = s_timeRecord.header.timestamp;
+            LogRecordFinalize((log_record_t*)&s_positionRecord);
+            xQueueSend(dataLogQueue, &s_positionRecord, 2U);
+            s_velocityRecord.header.timestamp = s_timeRecord.header.timestamp;
+            LogRecordFinalize((log_record_t*)&s_velocityRecord);
+            xQueueSend(dataLogQueue, &s_velocityRecord, 2U);
+            outputCounter++;
         }
+
         // Wait for the next cycle.
         vTaskDelayUntil(&xLastWakeTime, xPeriod);
     }

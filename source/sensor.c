@@ -28,14 +28,43 @@
  */
 
 #include "sensor.h"
+#include "clock_config.h"
 #include "FreeRTOS.h"
 #include "fsl_debug_console.h"
 #include "fxos8700.h"
 #include "fxas21002.h"
+#include "logger.h"
+#include "logrecord.h"
 #include "peripherals.h"
+#include "queue.h"
 #include "task.h"
 
 volatile bool busy;
+
+typedef struct accel_record {
+    record_header_t     header;
+    sensor_accel_t      accelerations;
+    sensor_mags_t       magnetometer;
+    uint8_t             fxos8700Status;
+    uint8_t             unused[9];
+    uint8_t             chkA;
+    uint8_t             chkB;
+} log_accel_t;
+
+typedef struct gyro_record {
+    record_header_t     header;
+    sensor_gyro_t       gyroRates;
+    uint8_t             fxas21002Status;
+    uint8_t             unused[15];
+    uint8_t             chkA;
+    uint8_t             chkB;
+} log_gyro_t;
+
+static log_accel_t s_accelRecord;
+static log_gyro_t s_gyroRecord;
+
+volatile bool fxos8700DataAvailable;
+volatile bool fxas21002DataAvailable;
 
 void Sensor_CompletionCallback(LPI2C_Type *base,
         lpi2c_master_handle_t *handle,
@@ -53,10 +82,19 @@ void Sensor_CompletionCallback(LPI2C_Type *base,
         PRINTF("FXOS8700 Config: [%d]\n", completionStatus);
         break;
 
-    case fxos8700_Acceleration:
-        break;
+    case fxos8700_Data:
+        s_accelRecord.fxos8700Status = fxos8700SensorData[0];
+        int16_t rawAccelX = (int16_t)(fxos8700SensorData[1]<<8 | fxos8700SensorData[2]) >> 2;
+        s_accelRecord.accelerations.x = (((rawAccelX * 25) + 1280) / 2560) * 5;
+        int16_t rawAccelY = (int16_t)(fxos8700SensorData[3]<<8 | fxos8700SensorData[4]) >> 2;
+        s_accelRecord.accelerations.y = (((rawAccelY * 25) + 1280) / 2560) * 5;
+        int16_t rawAccelZ = (int16_t)(fxos8700SensorData[5]<<8 | fxos8700SensorData[6]) >> 2;
+        s_accelRecord.accelerations.z = (((rawAccelZ * 25) + 1280) / 2560) * 5;
 
-    case fxos8700_Magnetometer:
+        s_accelRecord.magnetometer.x = (int16_t)(fxos8700SensorData[7]<<8 | fxos8700SensorData[8]);
+        s_accelRecord.magnetometer.y = (int16_t)(fxos8700SensorData[9]<<8 | fxos8700SensorData[10]);
+        s_accelRecord.magnetometer.z = (int16_t)(fxos8700SensorData[11]<<8 | fxos8700SensorData[12]);
+        fxos8700DataAvailable = true;
         break;
 
     case fxas21002_WhoAmI:
@@ -67,7 +105,15 @@ void Sensor_CompletionCallback(LPI2C_Type *base,
         PRINTF("FXAS21002 Config: [%d]\n", completionStatus);
         break;
 
-    case fxas21002_Gyro:
+    case fxas21002_Data:
+        s_gyroRecord.fxas21002Status = fxas21002SensorData[0];
+        int16_t rawGyroX = (int16_t)(fxas21002SensorData[1]<<8 | fxas21002SensorData[2]);
+        s_gyroRecord.gyroRates.x = (((rawGyroX * 625) + 312) / 20480);
+        int16_t rawGyroY = (int16_t)(fxas21002SensorData[3]<<8 | fxas21002SensorData[4]);
+        s_gyroRecord.gyroRates.y = (((rawGyroY * 625) + 312) / 20480);
+        int16_t rawGyroZ = (int16_t)(fxas21002SensorData[5]<<8 | fxas21002SensorData[6]);
+        s_gyroRecord.gyroRates.z = (((rawGyroZ * 625) + 312) / 20480);
+        fxas21002DataAvailable = true;
         break;
     }
     busy = false;
@@ -78,15 +124,11 @@ status_t SensorInit(void) {
     LPI2C1_masterHandle.completionCallback = Sensor_CompletionCallback;
 
     busy = true;
-//    FXOS8700_WhoAmI();
-//    busy = true;
-//    FXAS21002_WhoAmI();
-//    while (busy) {
-//    }
     status_t status = FXOS8700_Configure();
     if (kStatus_Success == status) {
         while (busy) {
         }
+        busy = true;
         status = FXAS21002_Configure();
         while (busy) {
         }
@@ -96,36 +138,44 @@ status_t SensorInit(void) {
 
 void SensorTask( void *pvParameters ) {
 
-    const TickType_t xPeriod = 20;
+    const TickType_t xPeriod = 40;
     TickType_t xLastWakeTime = xTaskGetTickCount();
-    uint32_t outputCounter = 0U;
+    uint32_t outputCounter;
+
+    LogRecordHeaderInit(&s_accelRecord.header, LOGRECORD_CLASS_DYNAMICS, DYNAMICS_ACCELEROMETER);
+    LogRecordHeaderInit(&s_gyroRecord.header, LOGRECORD_CLASS_DYNAMICS, DYNAMICS_GYRO);
+
 
     for (;;) {
 
-        FXOS8700_Process();
-        FXAS21002_Process();
+        FXOS8700_RequestData();
+        outputCounter = 0U;
+        while (!fxos8700DataAvailable && (outputCounter < 100U)) {
+            SDK_DelayAtLeastUs(100U, BOARD_BOOTCLOCKRUN_CORE_CLOCK);
+            outputCounter++;
+        }
+        if (fxos8700DataAvailable) {
+            s_accelRecord.header.timestamp = xTaskGetTickCount();
+            LogRecordFinalize((log_record_t*)&s_accelRecord);
+            xQueueSend(dataLogQueue, &s_accelRecord, 0U);
+            fxos8700DataAvailable = false;
+        }
 
-        if ((++outputCounter % 50) == 0) {
-            sensor_accel_t* pAccelerometer = FXOS8700_Acceleration();
-            PRINTF("Accelerometer x:%03d  y:%03d  z:%03d\n",
-                    pAccelerometer->x,
-                    pAccelerometer->y,
-                    pAccelerometer->z);
-
-            sensor_mags_t* pMagnetometer = FXOS8700_Compass();
-            PRINTF("Magnetometer x:%03d  y:%03d  z:%03d\n",
-                    pMagnetometer->x,
-                    pMagnetometer->y,
-                    pMagnetometer->z);
-
-            sensor_gyro_t* pGyro = FXAS21002_Gyro();
-            PRINTF("Gyro  x:%03d  y:%03d  z:%03d\n",
-                    pGyro->x,
-                    pGyro->y,
-                    pGyro->z);
+        FXAS21002_RequestData();
+        outputCounter = 0U;
+        while (!fxas21002DataAvailable && (outputCounter < 100U)) {
+            SDK_DelayAtLeastUs(100U, BOARD_BOOTCLOCKRUN_CORE_CLOCK);
+            outputCounter++;
+        }
+        if (fxas21002DataAvailable) {
+            s_gyroRecord.header.timestamp = xTaskGetTickCount();
+            LogRecordFinalize((log_record_t*)&s_gyroRecord);
+            xQueueSend(dataLogQueue, &s_gyroRecord, 0U);
+            fxas21002DataAvailable = false;
         }
 
         // Wait for the next cycle.
         vTaskDelayUntil(&xLastWakeTime, xPeriod);
+
     }
 }

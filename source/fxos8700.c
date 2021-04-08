@@ -2,7 +2,27 @@
  * fxos8700cq.c
  *
  *  Created on: Mar 8, 2021
- *      Author: jrosen
+ *      Author: sceaj
+ *
+ * Copyright (c) 2021 Jeff Rosen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 #include "fxos8700.h"
@@ -24,9 +44,7 @@
 #define FXOS8700_M_CTRL_REG2      0x5C
 #define FXOS8700_WHOAMI_VAL       0xC7
 
-static uint8_t          s_flags;
-static sensor_accel_t   s_acceleration;
-static sensor_mags_t    s_magnetometer;
+uint8_t         fxos8700SensorData[13];
 
 
 status_t FXOS8700_WhoAmI() {
@@ -161,53 +179,25 @@ status_t FXOS8700_Configure() {
 
 }
 
-uint8_t FXOS8700_Flags() {
-    return s_flags;
-}
-
-sensor_accel_t* FXOS8700_Acceleration() {
-    return &s_acceleration;
-}
-
-sensor_mags_t* FXOS8700_Compass() {
-    return &s_magnetometer;
-}
-
-status_t FXOS8700_Process() {
+status_t FXOS8700_RequestData() {
 
     uint8_t i2cReg = 0x00;
-    uint8_t sensorData[13];
 
     lpi2c_master_transfer_t i2cXfer;
     memset(&i2cXfer, 0, sizeof(i2cXfer));
     i2cXfer.slaveAddress = FXOS8700_I2C_ADDR;
-    i2cXfer.direction = kLPI2C_Write;
-    i2cXfer.subaddress = 0;
-    i2cXfer.subaddressSize = 0;
-    i2cXfer.data = &i2cReg;
-    i2cXfer.dataSize = 1;
+    i2cXfer.direction = kLPI2C_Read;
+    i2cXfer.subaddress = FXOS8700_STATUS;
+    i2cXfer.subaddressSize = 1;
+    i2cXfer.data = fxos8700SensorData;
+    i2cXfer.dataSize = sizeof(fxos8700SensorData);
     i2cXfer.flags = kLPI2C_TransferNoStopFlag;
 
-    status_t i2cStatus = LPI2C_MasterTransferBlocking(FXOS8700_I2C, &i2cXfer);
-    if (i2cStatus == kStatus_Success) {
-        i2cXfer.direction = kLPI2C_Read;
-        i2cXfer.data = sensorData;
-        i2cXfer.dataSize = sizeof(sensorData);
-        i2cXfer.flags = kLPI2C_TransferRepeatedStartFlag;
-        i2cStatus = LPI2C_MasterTransferBlocking(FXOS8700_I2C, &i2cXfer);
-        if (i2cStatus == kStatus_Success) {
-            s_flags = sensorData[0];
-            int16_t rawX = (int16_t)(sensorData[1]<<8 | sensorData[2]) >> 2;
-            s_acceleration.x = (((rawX * 25) + 1280) / 2560) * 5;
-            int16_t rawY = (int16_t)(sensorData[3]<<8 | sensorData[4]) >> 2;
-            s_acceleration.y = (((rawY * 25) + 1280) / 2560) * 5;
-            int16_t rawZ = (int16_t)(sensorData[5]<<8 | sensorData[6]) >> 2;
-            s_acceleration.z = (((rawZ * 25) + 1280) / 2560) * 5;
+    FXOS8700_I2C_HANDLE.userData = (void*)fxos8700_Data;
 
-            s_magnetometer.x = (int16_t)(sensorData[7]<<8 | sensorData[8]);
-            s_magnetometer.y = (int16_t)(sensorData[9]<<8 | sensorData[10]);
-            s_magnetometer.z = (int16_t)(sensorData[11]<<8 | sensorData[12]);
-        }
+    status_t i2cStatus = LPI2C_MasterTransferNonBlocking(FXOS8700_I2C, &FXOS8700_I2C_HANDLE, &i2cXfer);
+    if (i2cStatus != kStatus_Success) {
+        i2cStatus = kStatus_FXOS8700_BusBusy;
     }
 
     return i2cStatus;

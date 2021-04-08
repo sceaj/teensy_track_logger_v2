@@ -2,7 +2,27 @@
  * neo_m9n.h
  *
  *  Created on: Feb 21, 2021
- *      Author: jrosen
+ *      Author: sceaj
+ *
+ * Copyright (c) 2021 Jeff Rosen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 #ifndef NEO_M9N_H_
@@ -19,9 +39,8 @@ enum {
 };
 
 typedef struct gps_time {
-    uint32_t    iTOW;
-    int32_t     nano;
     uint16_t    year;
+    int16_t     millis;
     uint8_t     month;
     uint8_t     day;
     uint8_t     hour;
@@ -32,18 +51,16 @@ typedef struct gps_time {
 } gps_time_t;
 
 typedef struct gps_position {
-    uint32_t    iTOW;
     int32_t     lon;
     int32_t     lat;
-    int32_t     height;
     uint32_t    hMSL;
     uint32_t    hAcc;
     uint8_t     fixType;
     uint8_t     flags;
+    uint8_t     flags3;
 } gps_position_t;
 
 typedef struct gps_velocity {
-    uint32_t    iTOW;
     int32_t     gSpeed;
     int32_t     headMot;
     uint32_t    sAcc;
@@ -62,12 +79,6 @@ status_t NEOM9N_UartInit();
 
 status_t NEOM9N_GpsConfig();
 
-void NEOM9N_Process();
-
-gps_time_t* NEOM9N_GpsTime();
-
-gps_position_t* NEOM9N_GpsPosition();
-
-gps_velocity_t* NEOM9N_GpsVelocity();
+bool NEOM9N_Process();
 
 #endif /* NEO_M9N_H_ */
